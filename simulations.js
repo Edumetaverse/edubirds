@@ -1,4 +1,5 @@
 import * as THREE from './assets/vendor/three.module.js';
+import {wingbeats,beatsPerMinute,displayBpm} from './wingbeat-data.js';
 
 const $ = (selector) => document.querySelector(selector);
 const canvas = $('#simCanvas');
@@ -238,20 +239,20 @@ flightBird.position.y=2.9;
 scene.add(flightBird);
 const comparisonGroup=new THREE.Group();
 scene.add(comparisonGroup);
-// The descriptions and mode availability are species facts. The on-screen
-// animation tempo is deliberately slowed/illustrative, not a measured beat rate.
+// Shape and movement are teaching models; their flapping phases use the
+// separately sourced frequencies in wingbeat-data.js.
 const comparisonBirds={
-  lorikeet:{name:'Rainbow lorikeet',fact:'Fast, direct travel in noisy flocks between flowering trees.',wing:'Pointed parrot wings; a long tail helps steering.',modes:['fly'],rate:2.4,span:1.05,depth:.86,tail:1.2,bill:.85,colours:[0x277d55,0x318a43,0x225c8a,0xe79735],portrait:['bird-portraits.png','0% 0%'],source:'https://birdlife.org.au/bird-profiles/rainbow-lorikeet/'},
-  kookaburra:{name:'Laughing kookaburra',fact:'Leaves a lookout perch to swoop down on prey.',wing:'Broad, rounded wings; a sturdy body and bill.',modes:['fly'],rate:1.7,span:1.12,depth:1.08,tail:.9,bill:1.35,colours:[0x735342,0x76513e,0x4b3027,0xe7d6b0],portrait:['bird-portraits.png','50% 0%'],source:'https://birdlife.org.au/bird-profiles/laughing-kookaburra/'},
-  owl:{name:'Barn owl',fact:'Buoyant, low hunting flight with quiet wingbeats.',wing:'Long, rounded wings and soft, fringed feathers.',modes:['fly'],rate:1.5,span:1.28,depth:1.17,tail:.75,bill:.75,colours:[0xb78c62,0xb89a79,0x85694f,0xf4e6d1],portrait:['bird-portraits.png','100% 0%'],source:'https://www.allaboutbirds.org/guide/Barn_Owl/id'},
-  fairywren:{name:'Superb fairywren',fact:'Short, quick flights between low shrubs and cover.',wing:'Compact wings and an upright, long tail.',modes:['fly'],rate:3,span:.76,depth:.8,tail:1.65,bill:.75,colours:[0x204f81,0x2b63a6,0x102b52,0xe7e7dc],portrait:['bird-portraits.png','50% 100%'],source:'https://birdlife.org.au/bird-profiles/superb-fairy-wren/'},
-  flamingo:{name:'Flamingo',fact:'Flies with its neck stretched forward and legs trailing behind.',wing:'Large wings carry a long-necked wetland bird.',modes:['fly'],rate:1.45,span:1.25,depth:1.08,tail:.5,bill:1.1,colours:[0xe59a9a,0xe46d82,0x202c39,0xf5c4b6],portrait:['bird-portraits.png','100% 100%'],source:'https://animals.sandiegozoo.org/animals/flamingo'},
-  eagle:{name:'Golden eagle',fact:'Often soars and glides on rising air with wings held in a shallow V.',wing:'Very broad wings with separated fingertip feathers.',modes:['fly','soar'],rate:1.15,span:1.38,depth:1.18,tail:1.08,bill:1.2,colours:[0x5a3726,0x69442e,0x3d2c27,0x90613d],portrait:['additional-birds.png','0% 0%'],source:'https://www.allaboutbirds.org/guide/Golden_Eagle/id'},
-  'horned-owl':{name:'Great horned owl',fact:'Quiet flight with stiff, deep beats through wooded country.',wing:'Broad, rounded wings and very soft feathers.',modes:['fly'],rate:1.3,span:1.26,depth:1.2,tail:.82,bill:.8,colours:[0x745841,0x795f48,0x574739,0xb8a082],portrait:['additional-birds.png','50% 0%'],source:'https://www.allaboutbirds.org/guide/Great_Horned_Owl/id'},
-  heron:{name:'White-faced heron',fact:'A slow, bouncing flight between wetland feeding places.',wing:'Broad wings, long legs and a folded neck in flight.',modes:['fly'],rate:1.25,span:1.25,depth:1.13,tail:.55,bill:1.8,colours:[0x6d8492,0x7e98a7,0x3a4f5b,0xe4e7e3],portrait:['additional-birds.png','100% 0%'],source:'https://birdlife.org.au/bird-profiles/white-faced-heron/'},
-  macaw:{name:'Scarlet macaw',fact:'Travels through the rainforest canopy, often in pairs.',wing:'Long parrot wings and a very long tail for steering.',modes:['fly'],rate:1.65,span:1.14,depth:.96,tail:1.9,bill:1.55,colours:[0xc63830,0xe6b334,0x245bb5,0xf2bd77],portrait:['additional-birds.png','0% 100%'],source:'https://animaldiversity.org/accounts/Ara_macao/'},
-  hummingbird:{name:'Ruby-throated hummingbird',fact:'Flies fast, then holds position, rises or moves backwards at flowers.',wing:'Short wings rotate rapidly for precise hovering.',modes:['fly','hover'],rate:5,span:.78,depth:.7,tail:.75,bill:1.9,colours:[0x23815c,0x20704f,0x175a49,0xe5ddd0],portrait:['additional-birds.png','50% 100%'],source:'https://www.allaboutbirds.org/guide/Ruby-throated_Hummingbird/id'},
-  crow:{name:'Torresian crow',fact:'Flies between feeding places and gathers in flocks outside breeding season.',wing:'Strong black wings, a broad tail and pale eyes.',modes:['fly'],rate:1.8,span:1.12,depth:1.02,tail:1.05,bill:1.1,colours:[0x171c26,0x20293a,0x11151d,0x273041],portrait:['torresian-crow.webp','50% 50%'],source:'https://birdlife.org.au/bird-profiles/torresian-crow/'}
+  lorikeet:{name:'Rainbow lorikeet',fact:'Fast, direct travel in noisy flocks between flowering trees.',wing:'Pointed parrot wings; a long tail helps steering.',modes:['fly'],span:1.05,depth:.86,tail:1.2,bill:.85,colours:[0x277d55,0x318a43,0x225c8a,0xe79735],portrait:['bird-portraits.png','0% 0%'],source:'https://birdlife.org.au/bird-profiles/rainbow-lorikeet/'},
+  kookaburra:{name:'Laughing kookaburra',fact:'Leaves a lookout perch to swoop down on prey.',wing:'Broad, rounded wings; a sturdy body and bill.',modes:['fly'],span:1.12,depth:1.08,tail:.9,bill:1.35,colours:[0x735342,0x76513e,0x4b3027,0xe7d6b0],portrait:['bird-portraits.png','50% 0%'],source:'https://birdlife.org.au/bird-profiles/laughing-kookaburra/'},
+  owl:{name:'Barn owl',fact:'Buoyant, low hunting flight with quiet wingbeats.',wing:'Long, rounded wings and soft, fringed feathers.',modes:['fly'],span:1.28,depth:1.17,tail:.75,bill:.75,colours:[0xb78c62,0xb89a79,0x85694f,0xf4e6d1],portrait:['bird-portraits.png','100% 0%'],source:'https://www.allaboutbirds.org/guide/Barn_Owl/id'},
+  fairywren:{name:'Superb fairywren',fact:'Short, quick flights between low shrubs and cover.',wing:'Compact wings and an upright, long tail.',modes:['fly'],span:.76,depth:.8,tail:1.65,bill:.75,colours:[0x204f81,0x2b63a6,0x102b52,0xe7e7dc],portrait:['bird-portraits.png','50% 100%'],source:'https://birdlife.org.au/bird-profiles/superb-fairy-wren/'},
+  flamingo:{name:'Greater flamingo',fact:'Flies with its neck stretched forward and legs trailing behind.',wing:'Large wings carry a long-necked wetland bird.',modes:['fly'],span:1.25,depth:1.08,tail:.5,bill:1.1,colours:[0xe59a9a,0xe46d82,0x202c39,0xf5c4b6],portrait:['bird-portraits.png','100% 100%'],source:'https://www.chesterzoo.org/animals/greater-flamingo'},
+  eagle:{name:'Golden eagle',fact:'Often soars and glides on rising air with wings held in a shallow V.',wing:'Very broad wings with separated fingertip feathers.',modes:['fly','soar'],span:1.38,depth:1.18,tail:1.08,bill:1.2,colours:[0x5a3726,0x69442e,0x3d2c27,0x90613d],portrait:['additional-birds.png','0% 0%'],source:'https://www.allaboutbirds.org/guide/Golden_Eagle/id'},
+  'horned-owl':{name:'Great horned owl',fact:'Quiet flight with stiff, deep beats through wooded country.',wing:'Broad, rounded wings and very soft feathers.',modes:['fly'],span:1.26,depth:1.2,tail:.82,bill:.8,colours:[0x745841,0x795f48,0x574739,0xb8a082],portrait:['additional-birds.png','50% 0%'],source:'https://www.allaboutbirds.org/guide/Great_Horned_Owl/id'},
+  heron:{name:'White-faced heron',fact:'A slow, bouncing flight between wetland feeding places.',wing:'Broad wings, long legs and a folded neck in flight.',modes:['fly'],span:1.25,depth:1.13,tail:.55,bill:1.8,colours:[0x6d8492,0x7e98a7,0x3a4f5b,0xe4e7e3],portrait:['additional-birds.png','100% 0%'],source:'https://birdlife.org.au/bird-profiles/white-faced-heron/'},
+  macaw:{name:'Scarlet macaw',fact:'Travels through the rainforest canopy, often in pairs.',wing:'Long parrot wings and a very long tail for steering.',modes:['fly'],span:1.14,depth:.96,tail:1.9,bill:1.55,colours:[0xc63830,0xe6b334,0x245bb5,0xf2bd77],portrait:['additional-birds.png','0% 100%'],source:'https://animaldiversity.org/accounts/Ara_macao/'},
+  hummingbird:{name:'Ruby-throated hummingbird',fact:'Flies fast, then holds position, rises or moves backwards at flowers.',wing:'Short wings rotate rapidly for precise hovering.',modes:['fly','hover'],span:.78,depth:.7,tail:.75,bill:1.9,colours:[0x23815c,0x20704f,0x175a49,0xe5ddd0],portrait:['additional-birds.png','50% 100%'],source:'https://www.allaboutbirds.org/guide/Ruby-throated_Hummingbird/id'},
+  crow:{name:'Torresian crow',fact:'Flies between feeding places and gathers in flocks outside breeding season.',wing:'Strong black wings, a broad tail and pale eyes.',modes:['fly'],span:1.12,depth:1.02,tail:1.05,bill:1.1,colours:[0x171c26,0x20293a,0x11151d,0x273041],portrait:['torresian-crow.webp','50% 50%'],source:'https://birdlife.org.au/bird-profiles/torresian-crow/'}
 };
 const comparisonModels={Left:null,Right:null};
 function makeComparisonModel(profile){
@@ -587,6 +588,7 @@ function selectComparisonBird(side,key){
   $('#compare'+side+'Fact').textContent=bird.fact;
   $('#compare'+side+'Wing').textContent=bird.wing;
   $('#compare'+side+'Source').href=bird.source;
+  $('#compare'+side+'BeatSource').href=wingbeats[key].source;
   const portrait=$('#compare'+side+'Portrait');
   portrait.style.backgroundImage=`url('assets/${bird.portrait[0]}')`;
   portrait.style.backgroundPosition=bird.portrait[1];
@@ -601,13 +603,28 @@ function selectComparisonBird(side,key){
     choices.append(button);
   }
   $('#compare'+side+'ModeNote').textContent=`Available movement: ${bird.modes.join(' or ')}.`;
+  updateComparisonWingbeat(side);
   updateComparisonQuestion();
+}
+function updateComparisonWingbeat(side){
+  const selected=state.comparison[side];
+  const data=wingbeats[selected.bird];
+  const bpm=$('#compare'+side+'Bpm');
+  const evidence=$('#compare'+side+'Evidence');
+  if(selected.mode==='soar'){
+    bpm.textContent='0 beats/min while soaring';
+    evidence.textContent=`Wings held open. Active flapping: about ${beatsPerMinute(data.hz)} beats/min.`;
+  }else{
+    bpm.textContent=`≈ ${displayBpm(data).toLocaleString()} beats/min`;
+    evidence.textContent=`${data.kind==='estimate'?'Model estimate':data.kind==='reported'?'Species report':'Species measurement'} · ${data.basis}`;
+  }
 }
 function selectComparisonMode(side,mode){
   if(!comparisonBirds[state.comparison[side].bird].modes.includes(mode))return;
   state.comparison[side].mode=mode;
   $('#compare'+side+'Modes').querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.textContent.toLowerCase().startsWith(mode))));
   $('#compare'+side+'Label').textContent=`${comparisonBirds[state.comparison[side].bird].name} · ${mode}`;
+  updateComparisonWingbeat(side);
   updateComparisonQuestion();
 }
 function updateComparisonQuestion(){
@@ -618,8 +635,10 @@ function updateComparison(dt){
   if(state.mode!=='compare')return;
   state.comparison.time+=dt;
   for(const side of ['Left','Right']){
-    const selected=state.comparison[side],model=comparisonModels[side],bird=comparisonBirds[selected.bird];
-    const phase=state.comparison.time*bird.rate*Math.PI*2;
+    const selected=state.comparison[side],model=comparisonModels[side];
+    // A shared 1/8 playback scale preserves the relative frequency of both birds
+    // while letting the fastest wingbeats be resolved by normal display frames.
+    const phase=state.comparison.time*wingbeats[selected.bird].hz*Math.PI*2/8;
     const still=state.reducedMotion;
     if(selected.mode==='soar'){
       model.userData.animate(0,0);
@@ -628,10 +647,11 @@ function updateComparison(dt){
     }else{
       model.userData.animate(phase,still?0:selected.mode==='hover'?.62:.72);
       if(selected.mode==='hover'&&!still)for(const {wing,side:wingSide} of model.userData.wings)wing.rotation.y=wingSide*(.18+.38*Math.sin(phase));
+      else for(const {wing} of model.userData.wings)wing.rotation.y=0;
       model.rotation.z=0;
     }
     model.rotation.x=0;
-    model.position.y=still?2.75:2.75+Math.sin(phase)*(selected.mode==='hover'?.035:.055);
+    model.position.y=still||selected.mode==='soar'?2.75:2.75+Math.sin(phase)*(selected.mode==='hover'?.035:.055);
     model.position.z=still||selected.mode==='hover'?0:Math.sin(state.comparison.time*(selected.mode==='soar'?.55:1.15))*(selected.mode==='soar'?.28:.16);
   }
 }
@@ -711,7 +731,7 @@ $('#flightTab').addEventListener('click',()=>setMode('flight'));
 $('#flockTab').addEventListener('click',()=>setMode('flock'));
 $('#compareTab').addEventListener('click',()=>setMode('compare'));
 for(const tab of [$('#flightTab'),$('#flockTab'),$('#compareTab')])tab.addEventListener('keydown',event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();const modes=['flight','flock','compare'];const direction=event.key==='ArrowRight'?1:-1;const next=modes[(modes.indexOf(state.mode)+direction+modes.length)%modes.length];setMode(next);$('#'+next+'Tab').focus()}});
-setMode('flight');
+setMode(new URLSearchParams(location.search).get('lab')==='compare'?'compare':'flight');
 updateFlightReadout();
 
 const pointers=new Map();

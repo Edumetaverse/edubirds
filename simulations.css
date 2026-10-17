@@ -35,3 +35,7 @@
 .comparison-cards .compare-mode-note{font-size:10px;color:#647568}
 .compare-source{display:inline-block;margin:1px 3px 0;font-size:10px;font-weight:800;text-decoration:underline;text-underline-offset:2px;color:#1d6149}
 @media(max-width:900px){.lab-layout.compare-layout{grid-template-columns:1fr}.compare-layout .stage-column{position:static}}
+.wingbeat-reading{display:grid;gap:3px;margin:9px 3px 5px;padding:9px 10px;background:#e5eee5;border-left:3px solid #2c8160;color:#153f32}
+.wingbeat-reading strong{font-size:15px;line-height:1.2}
+.wingbeat-reading span{font-size:10px;line-height:1.35;color:#456357}
+.compare-note a{color:#1d6149;font-weight:800}

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How we model wingbeats — EDUAVIARY</title>
+  <meta name="description" content="Sources and limits for the EDUAVIARY bird wingbeat comparison.">
+  <style>
+    :root{font-family:Arial,sans-serif;color:#173a33;background:#faf8ef}*{box-sizing:border-box}body{margin:0}a{color:#165842}a:focus-visible{outline:3px solid #d7653e;outline-offset:3px}.top{background:#123b32;color:white;padding:18px max(20px,calc((100vw - 1000px)/2));display:flex;justify-content:space-between;gap:18px;align-items:center}.top a{color:white;font-weight:700}.top .brand{font-size:19px;text-decoration:none;letter-spacing:.5px}main{max-width:1000px;margin:auto;padding:48px 20px 80px}.eyebrow{font-size:11px;letter-spacing:2px;font-weight:800;color:#b55534;text-transform:uppercase}h1{font-family:Georgia,serif;font-size:clamp(38px,6vw,64px);line-height:1.03;letter-spacing:-2px;margin:10px 0 20px}h2{font-family:Georgia,serif;font-size:29px;margin:34px 0 12px}p{line-height:1.65;max-width:760px}.intro{font-size:18px}.callout{background:#e4ede3;border-left:4px solid #2d8561;padding:16px 19px;margin:26px 0}.callout p{margin:0}table{width:100%;border-collapse:collapse;background:#fffdf7;font-size:14px}th,td{padding:11px;text-align:left;vertical-align:top;border-bottom:1px solid #d9dfd3}th{background:#173f34;color:#fff}td strong{display:block}td small{color:#52675c}td a{display:inline-block;margin-right:10px}code{background:#e9eee6;padding:2px 5px}ul{line-height:1.65;padding-left:23px}@media(max-width:650px){table{font-size:12px}th,td{padding:7px 5px}.top{padding:14px 18px}}
+  </style>
+  <script type="module">
+    import {wingbeats,displayBpm,scalingSource} from './wingbeat-data.js';
+    const names={lorikeet:'Rainbow lorikeet',kookaburra:'Laughing kookaburra',owl:'Barn owl',fairywren:'Superb fairywren',flamingo:'Greater flamingo',eagle:'Golden eagle','horned-owl':'Great horned owl',heron:'White-faced heron',macaw:'Scarlet macaw',hummingbird:'Ruby-throated hummingbird',crow:'Torresian crow'};
+    const tbody=document.querySelector('#rates');
+    for(const [key,data] of Object.entries(wingbeats)){
+      const row=document.createElement('tr');
+      const bird=document.createElement('td');bird.textContent=names[key];
+      const rate=document.createElement('td');
+      rate.textContent=`≈ ${displayBpm(data).toLocaleString()} bpm`;
+      const basis=document.createElement('td');
+      const type=document.createElement('strong');type.textContent=data.kind==='estimate'?'Model estimate':data.kind==='reported'?'Species report':'Species measurement';
+      const detail=document.createElement('small');detail.textContent=data.basis;
+      basis.append(type,detail);
+      const source=document.createElement('td');
+      const study=document.createElement('a');study.href=data.source;study.target='_blank';study.rel='noopener noreferrer';study.textContent='Rate evidence ↗';source.append(study);
+      if(data.massSource){const mass=document.createElement('a');mass.href=data.massSource;mass.target='_blank';mass.rel='noopener noreferrer';mass.textContent='Species mass ↗';source.append(mass)}
+      row.append(bird,rate,basis,source);tbody.append(row);
+    }
+    document.querySelector('#scaling').href=scalingSource;
+  </script>
+</head>
+<body>
+  <header class="top"><a class="brand" href="index.html">✳ EDUAVIARY.</a><a href="simulations.html?lab=compare">← Back to comparisons</a></header>
+  <main>
+    <p class="eyebrow">Behind the model</p>
+    <h1>How fast do wings beat?</h1>
+    <p class="intro">The comparison uses real published observations where we found them. For birds without a species measurement, it uses a labelled estimate based on a measured reference bird.</p>
+    <div class="callout"><p><strong>One beat</strong> is a complete downstroke and upstroke. A rate of 4 beats per second is 240 beats per minute. A bird soaring with open wings makes <strong>zero wingbeats</strong> during that period.</p></div>
+    <h2>The eleven comparison birds</h2>
+    <p>These are approximate rates for active flapping. Wingbeat frequency changes with speed, manoeuvre, weather, body size and whether the bird is taking off, cruising or hovering.</p>
+    <div style="overflow-x:auto"><table><thead><tr><th>Bird</th><th>Beats per minute</th><th>Evidence</th><th>Read more</th></tr></thead><tbody id="rates"></tbody></table></div>
+    <noscript><p>Enable JavaScript to see the values. The evidence links remain available in the 3D lab.</p></noscript>
+    <h2>How estimates were made</h2>
+    <p>Research on steady cruising flight predicts that wingbeat frequency tends to change with body mass to the power of minus one sixth when birds have similar proportions. Our estimate starts with a published rate for a reference bird, then calculates <code>estimated rate = reference rate × (bird mass ÷ reference mass)<sup>−1/6</sup></code>. The measured reference rates come from the <a href="https://cdn.elifesciences.org/articles/89968/elife-89968-supp3-v1.pdf" target="_blank" rel="noopener noreferrer">eLife bird data table</a>; the rule comes from <a id="scaling" href="https://journals.biologists.com/jeb/article/199/7/1613/7344/Wingbeat-Frequency-of-Birds-in-Steady-Cruising" target="_blank" rel="noopener noreferrer">Pennycuick’s flight research</a>.</p>
+    <p>The rule is a rough comparison, especially when the reference bird has a different wing shape. The kookaburra and flamingo proxies are particularly coarse. These estimates should never be read as measured wingbeat rates for those species. The <a href="https://nora.nerc.ac.uk/id/eprint/533121/1/rsif.2022.0168.pdf" target="_blank" rel="noopener noreferrer">barn owl field study</a>, <a href="https://arxiv.org/abs/2412.00231" target="_blank" rel="noopener noreferrer">golden eagle field study</a>, and <a href="https://www.allaboutbirds.org/guide/Ruby-throated_Hummingbird/overview" target="_blank" rel="noopener noreferrer">Cornell hummingbird profile</a> provide the species-specific values.</p>
+    <h2>Why the models move slowly</h2>
+    <p>All comparison wings play at one eighth of the listed rate. This keeps their relative timing while making rapid beats visible on a classroom screen. The readout shows the bird’s full rate, not the slow-motion playback rate. The 3D models teach body and wing differences; they are not anatomical scans or an aerodynamic prediction.</p>
+  </main>
+</body>
+</html>
