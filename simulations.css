@@ -18,3 +18,20 @@
 
 .flight-evidence{border-top:1px solid #d7ddcd;padding:22px;background:#fffdf7}.flight-evidence h2{font-family:var(--serif);font-size:26px;margin:0 0 5px}.flight-evidence>p{font-size:12px;color:#50685a;line-height:1.55;margin:0 0 12px}.flight-evidence canvas{display:block;width:100%;height:auto;border:1px solid #d6dfd4;background:#f7faf5}.flight-evidence #trialStatus{font-weight:800;color:#245e4b;margin:10px 0}.trial-table-wrap{overflow-x:auto}.flight-evidence table{border-collapse:collapse;width:100%;font-size:11px;text-align:left}.flight-evidence caption{text-align:left;font-weight:800;margin:6px 0}.flight-evidence th,.flight-evidence td{padding:6px;border-bottom:1px solid #d9e2d8;white-space:nowrap}.flight-evidence th{color:#9b563c}.flight-evidence .trial-model-note{font-size:10px;color:#67796a;margin:13px 0 0}.motion-button{border:1px solid #a4bba8;background:#edf2e5;color:#174b3b;padding:9px 12px;font-size:11px;font-weight:800}.motion-button[aria-pressed="true"]{background:#174b3b;color:white}.sim-stage canvas:focus-visible{outline:4px solid #f0a148;outline-offset:-5px}
 @media(max-width:460px){.edumetaverse-banner{flex-wrap:wrap;gap:1px;padding:6px 12px}.edumetaverse-banner span{flex-basis:100%;text-align:center;font-size:8px}.edumetaverse-banner img{width:142px}}
+
+.lab-layout.compare-layout{grid-template-columns:minmax(0,1.28fr) minmax(390px,.94fr)}
+.compare-layout .stage-column{position:sticky;top:12px}
+.comparison-cards{grid-template-columns:1fr;gap:12px}
+.comparison-cards article{padding:12px;background:#f5f5ec}
+.compare-select-label{display:block;color:#a65c3e;font-size:10px;font-weight:800;letter-spacing:1.2px;margin:0 0 5px}
+.comparison-cards select{width:100%;min-height:39px;padding:7px 9px;border:1px solid #acc3ae;background:#fffdf7;color:#173a33;font-weight:800;font-size:12px}
+.compare-portrait{height:105px;margin-top:9px}
+.comparison-cards h3{font-size:20px;margin:8px 3px 4px}
+.comparison-cards p{margin:0 3px 6px;font-size:12px}
+.comparison-cards .compare-wing{color:#255f4c;font-weight:700}
+.compare-modes{display:flex;flex-wrap:wrap;gap:5px;margin:8px 3px 5px}
+.compare-modes button{border:1px solid #9ebca4;background:#eaf1e7;color:#164b3b;padding:6px 9px;font-size:11px;font-weight:800}
+.compare-modes button[aria-pressed="true"]{background:#164b3b;color:#fff}
+.comparison-cards .compare-mode-note{font-size:10px;color:#647568}
+.compare-source{display:inline-block;margin:1px 3px 0;font-size:10px;font-weight:800;text-decoration:underline;text-underline-offset:2px;color:#1d6149}
+@media(max-width:900px){.lab-layout.compare-layout{grid-template-columns:1fr}.compare-layout .stage-column{position:static}}
