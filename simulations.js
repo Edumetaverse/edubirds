@@ -461,6 +461,8 @@ function updateTrial(dt){
   trials.push(activeTrial);trials=trials.slice(-6);
   const change=activeTrial.change;
   activeTrial=null;setTrialControlsDisabled(false);renderTrialRows();
+  state.flight.running=false;
+  $('#flightToggle').textContent='Resume flight';
   try{localStorage.setItem(trialStoreKey,JSON.stringify(trials))}catch{}
   $('#trialStatus').textContent=`Test complete. The bird ${change>0.05?'rose':change<-.05?'sank':'stayed near its starting height'} ${Math.abs(change).toFixed(1)} m in six seconds. Change one control and test again.`;
 }
