@@ -1,4 +1,4 @@
-# Bird Lab
+# EduBirds
 
 An interactive field guide and 3D aviary lab for NSW Stage 2 and 3 students. The site can be published directly from the root of the `main` branch with GitHub Pages. It uses static HTML, CSS and JavaScript; no build step, server-side service or account is required.
 
@@ -30,7 +30,7 @@ The 3D labs use articulated mesh geometry rendered by Three.js. Their flight val
 
 ## Artwork and third-party code
 
-The PNGs in `assets/` were generated for Bird Lab. The hero prompt requested a hand-painted Australian bushland scene with a kookaburra, rainbow lorikeet and superb fairywren, leaving space for a headline. The first portrait prompt requested a six-bird contact sheet of rainbow lorikeet, laughing kookaburra, barn owl, little penguin, superb fairywren and flamingo. The second requested golden eagle, great horned owl, white-faced heron, scarlet macaw and male ruby-throated hummingbird in five cells of a six-cell contact sheet.
+The PNGs in `assets/` were generated for EduBirds. The hero prompt requested a hand-painted Australian bushland scene with a kookaburra, rainbow lorikeet and superb fairywren, leaving space for a headline. The first portrait prompt requested a six-bird contact sheet of rainbow lorikeet, laughing kookaburra, barn owl, little penguin, superb fairywren and flamingo. The second requested golden eagle, great horned owl, white-faced heron, scarlet macaw and male ruby-throated hummingbird in five cells of a six-cell contact sheet.
 
 The `assets/vendor/` files are Three.js 0.186.1 from the npm package `three`. Its MIT license is included as `THREE-LICENSE.txt`.
 
@@ -45,4 +45,4 @@ The `assets/vendor/` files are Three.js 0.186.1 from the npm package `three`. It
 - [Cornell Lab: ruby-throated hummingbird](https://www.allaboutbirds.org/guide/Ruby-throated_Hummingbird/overview)
 - [NSW Curriculum: Science and Technology K–6 (2024)](https://curriculum.nsw.edu.au/learning-areas/science/science-and-technology-k-6-2024/overview)
 
-Bird Lab is written for Stage 2–3 learners. It does not claim formal syllabus outcome mapping.
+EduBirds is written for Stage 2–3 learners. It does not claim formal syllabus outcome mapping.
