@@ -283,6 +283,7 @@ flockGroup.visible=false;
 
 const state={
   mode:'flight',
+  reducedMotion:window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   flight:{airspeed:14,spread:1,beatRate:3,style:'alternate',time:0,altitude:30,verticalSpeed:0,running:true,readoutTime:0,wingAmplitude:1},
   flock:{size:16,separation:1.4,alignment:1,cohesion:.8,running:true,time:0},
   comparison:{pair:'soar-hover',time:0}
@@ -346,6 +347,7 @@ function updateFlight(dt){
     f.verticalSpeed+=forces.net/REFERENCE_MASS_KG*dt;
     f.altitude=THREE.MathUtils.clamp(f.altitude+f.verticalSpeed*dt,ALTITUDE_MIN_M,ALTITUDE_MAX_M);
     if((f.altitude===ALTITUDE_MIN_M&&f.verticalSpeed<0)||(f.altitude===ALTITUDE_MAX_M&&f.verticalSpeed>0))f.verticalSpeed=0;
+    updateTrial(dt);
   }
   const forces=flightForces();
   // Keep every metre in the 0–60 m experiment visible, including takeoff.
@@ -355,7 +357,7 @@ function updateFlight(dt){
   flightBird.rotation.z=THREE.MathUtils.damp(flightBird.rotation.z,THREE.MathUtils.clamp(f.verticalSpeed/18,-.13,.13),3.5,dt);
   flightBird.rotation.x=0;
   for(const {wing,side} of flightBird.userData.wings)wing.scale.x=side*1.1*f.spread;
-  f.wingAmplitude=THREE.MathUtils.damp(f.wingAmplitude,wingsPowered()?1:0,5,dt);
+  f.wingAmplitude=THREE.MathUtils.damp(f.wingAmplitude,!state.reducedMotion&&wingsPowered()?1:0,5,dt);
   flightBird.userData.animate(f.time*f.beatRate*Math.PI*2,f.wingAmplitude);
   liftArrow.position.set(-2.2,flightBird.position.y-1.55,.7);
   weightArrow.position.set(2.2,flightBird.position.y+1.4,.7);
@@ -391,6 +393,96 @@ function updateFlightReadout(){
   $('#scenarioMode').textContent=result;
   $('#sceneCallout').textContent=result;
 }
+
+const trialStoreKey='eduaviary-flight-trials-v1';
+const chart=$('#flightChart');
+const chartContext=chart.getContext('2d');
+let activeTrial=null;
+let trials=[];
+try {
+  const saved=JSON.parse(localStorage.getItem(trialStoreKey)||'[]');
+  if(Array.isArray(saved))trials=saved.filter(item=>item&&Array.isArray(item.samples)&&Number.isFinite(item.change)).slice(-6);
+} catch { /* Trials still work if storage is unavailable. */ }
+
+function drawTrial(samples=[]) {
+  const ctx=chartContext;
+  const width=chart.width,height=chart.height;
+  ctx.clearRect(0,0,width,height);
+  ctx.fillStyle='#f7faf5';ctx.fillRect(0,0,width,height);
+  const left=45,right=width-18,top=18,bottom=height-32;
+  ctx.strokeStyle='#ccdacd';ctx.lineWidth=1;
+  ctx.font='11px Arial, sans-serif';ctx.fillStyle='#4b6558';
+  for(let altitude=0;altitude<=60;altitude+=15){
+    const y=bottom-altitude/60*(bottom-top);
+    ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();
+    ctx.fillText(`${altitude} m`,5,y+4);
+  }
+  for(let time=0;time<=6;time+=2){
+    const x=left+time/6*(right-left);
+    ctx.fillText(`${time} s`,x-8,height-10);
+  }
+  if(samples.length<2){ctx.fillText('Run a six-second test to plot height over time.',left+16,top+60);return;}
+  ctx.beginPath();ctx.lineWidth=3;ctx.strokeStyle='#17664e';
+  samples.forEach((point,index)=>{
+    const x=left+Math.min(6,point.time)/6*(right-left);
+    const y=bottom-Math.max(0,Math.min(60,point.altitude))/60*(bottom-top);
+    if(index===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+}
+function renderTrialRows(){
+  const body=$('#trialRows');body.replaceChildren();
+  if(!trials.length){const row=document.createElement('tr');const cell=document.createElement('td');cell.colSpan=6;cell.textContent='No trials yet.';row.append(cell);body.append(row);return;}
+  trials.forEach((trial,index)=>{
+    const row=document.createElement('tr');
+    const values=[index+1,trial.style,`${trial.beatRate}/s`,`${trial.airspeed} m/s`,`${Math.round(trial.spread*100)}%`,`${trial.change>=0?'+':''}${trial.change.toFixed(1)} m`];
+    values.forEach(value=>{const cell=document.createElement('td');cell.textContent=String(value);row.append(cell)});
+    body.append(row);
+  });
+}
+function setTrialControlsDisabled(disabled){
+  for(const selector of ['#beatRate','#airspeed','#spread','#flapButton','#glideButton','#alternateButton'])$(selector).disabled=disabled;
+  $('#trialStart').disabled=disabled;
+}
+function cancelTrial(message){
+  if(!activeTrial)return;
+  activeTrial=null;setTrialControlsDisabled(false);$('#trialStatus').textContent=message;
+}
+function updateTrial(dt){
+  if(!activeTrial)return;
+  activeTrial.elapsed=Math.min(6,activeTrial.elapsed+dt);
+  activeTrial.sampleTime+=dt;
+  if(activeTrial.sampleTime<.12&&activeTrial.elapsed<6)return;
+  activeTrial.sampleTime=0;
+  activeTrial.samples.push({time:activeTrial.elapsed,altitude:state.flight.altitude});
+  drawTrial(activeTrial.samples);
+  if(activeTrial.elapsed<6)return;
+  activeTrial.change=state.flight.altitude-30;
+  trials.push(activeTrial);trials=trials.slice(-6);
+  const change=activeTrial.change;
+  activeTrial=null;setTrialControlsDisabled(false);renderTrialRows();
+  try{localStorage.setItem(trialStoreKey,JSON.stringify(trials))}catch{}
+  $('#trialStatus').textContent=`Test complete. The bird ${change>0.05?'rose':change<-.05?'sank':'stayed near its starting height'} ${Math.abs(change).toFixed(1)} m in six seconds. Change one control and test again.`;
+}
+$('#trialStart').addEventListener('click',()=>{
+  if(activeTrial)return;
+  Object.assign(state.flight,{time:0,altitude:30,verticalSpeed:0,running:true,readoutTime:0});
+  $('#flightToggle').textContent='Pause flight';
+  activeTrial={style:state.flight.style,beatRate:state.flight.beatRate,airspeed:state.flight.airspeed,spread:state.flight.spread,elapsed:0,sampleTime:0,samples:[{time:0,altitude:30}]};
+  setTrialControlsDisabled(true);drawTrial(activeTrial.samples);updateFlightReadout();
+  $('#trialStatus').textContent='Recording a six-second flight test from 30 m…';
+});
+$('#trialClear').addEventListener('click',()=>{
+  cancelTrial('Trial stopped.');trials=[];renderTrialRows();drawTrial();
+  try{localStorage.removeItem(trialStoreKey)}catch{}
+  $('#trialStatus').textContent='Results cleared. Run a trial to make a graph.';
+});
+$('#motionToggle').setAttribute('aria-pressed',String(state.reducedMotion));
+$('#motionToggle').addEventListener('click',()=>{
+  state.reducedMotion=!state.reducedMotion;
+  $('#motionToggle').setAttribute('aria-pressed',String(state.reducedMotion));
+});
+renderTrialRows();drawTrial(trials.at(-1)?.samples||[]);
 function updateFlock(dt){
   const f=state.flock;
   if(!f.running)return;
@@ -469,8 +561,8 @@ function updateComparison(dt){
   for(const [name,model] of Object.entries(comparisonModels)){
     if(!model.visible)continue;
     const rate=comparisonBirds[name].rate;
-    model.userData.animate(state.comparison.time*rate*Math.PI*2,name==='eagle'?.55:name==='owl'?.7:.9);
-    model.position.y=2.75+Math.sin(state.comparison.time*rate*Math.PI*2)*.07;
+    model.userData.animate(state.comparison.time*rate*Math.PI*2,state.reducedMotion?0:name==='eagle'?.55:name==='owl'?.7:.9);
+    model.position.y=state.reducedMotion?2.75:2.75+Math.sin(state.comparison.time*rate*Math.PI*2)*.07;
   }
 }
 document.querySelectorAll('[data-comparison]').forEach(button=>button.addEventListener('click',()=>selectComparison(button.dataset.comparison)));
@@ -496,6 +588,7 @@ $('#flockSize').addEventListener('change',event=>{state.flock.size=Number(event.
 $('#flockToggle').addEventListener('click',()=>{state.flock.running=!state.flock.running;$('#flockToggle').textContent=state.flock.running?'Pause flock':'Resume flock'});
 $('#flightToggle').addEventListener('click',()=>{state.flight.running=!state.flight.running;$('#flightToggle').textContent=state.flight.running?'Pause flight':'Resume flight'});
 $('#flightReset').addEventListener('click',()=>{
+  cancelTrial('Trial stopped. Reset flight to begin a new test.');
   Object.assign(state.flight,{airspeed:14,spread:1,beatRate:3,style:'alternate',time:0,altitude:30,verticalSpeed:0,running:true,readoutTime:0,wingAmplitude:1});
   $('#airspeed').value='14';$('#spread').value='100';$('#beatRate').value='3';
   $('#airspeedOutput').textContent='14 m/s';$('#spreadOutput').textContent='100%';$('#beatRateOutput').textContent='3 beats/s';
@@ -510,6 +603,7 @@ $('#flockReset').addEventListener('click',()=>{
 
 let previousOrbit=null;
 function setMode(mode){
+  if(mode!=='flight')cancelTrial('Trial stopped when you left the flight lab.');
   if(mode==='compare'&&state.mode!=='compare'){
     previousOrbit={...orbit};
     Object.assign(orbit,{yaw:.16,pitch:.32,radius:8.3*Math.max(1,1.32/camera.aspect)});
@@ -528,6 +622,7 @@ function setMode(mode){
   $('#flightControls').hidden=!flight;$('#flockControls').hidden=!flock;$('#compareControls').hidden=!compare;
   $('#flightReadout').hidden=!flight;$('#flockReadout').hidden=!flock;
   $('#flightExtra').hidden=!flight;
+  $('#flight-evidence').hidden=!flight;
   $('#labTitle').textContent=flight?'How do birds fly?':flock?'How does a flock move together?':'How do wings fit different jobs?';
   $('#stageLabel').textContent=flight?'BIRD FLIGHT · 3D FORCE MODEL':flock?'MODEL BIRDS · FLOCKING RULES':'WING ADAPTATIONS · SIMPLIFIED 3D MODELS';
   $('#forceKey').hidden=!flight;$('#sceneCallout').hidden=!flight;$('#altitudeMeter').hidden=!flight;
@@ -554,10 +649,22 @@ canvas.addEventListener('pointermove',event=>{
 function releasePointer(event){pointers.delete(event.pointerId);previousPinch=0}
 canvas.addEventListener('pointerup',releasePointer);canvas.addEventListener('pointercancel',releasePointer);
 canvas.addEventListener('wheel',event=>{event.preventDefault();orbit.radius=THREE.MathUtils.clamp(orbit.radius+event.deltaY*.012,7,27);updateCamera()},{passive:false});
+canvas.addEventListener('keydown',event=>{
+  const key=event.key;
+  if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-','_'].includes(key))return;
+  event.preventDefault();
+  if(key==='ArrowLeft')orbit.yaw+=.12;
+  if(key==='ArrowRight')orbit.yaw-=.12;
+  if(key==='ArrowUp')orbit.pitch=THREE.MathUtils.clamp(orbit.pitch+.1,-.15,1.2);
+  if(key==='ArrowDown')orbit.pitch=THREE.MathUtils.clamp(orbit.pitch-.1,-.15,1.2);
+  if(key==='+'||key==='=')orbit.radius=THREE.MathUtils.clamp(orbit.radius-.6,7,27);
+  if(key==='-'||key==='_')orbit.radius=THREE.MathUtils.clamp(orbit.radius+.6,7,27);
+  updateCamera();
+});
 
 function resize(){const width=stage.clientWidth,height=stage.clientHeight;renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();if(state.mode==='compare'){orbit.radius=8.3*Math.max(1,1.32/camera.aspect);updateCamera()}}
 new ResizeObserver(resize).observe(stage);
 resize();
 const clock=new THREE.Clock();
-function frame(){const dt=Math.min(clock.getDelta(),.05);updateFlight(dt);updateFlock(dt);updateComparison(dt);clouds.forEach((cloud,i)=>{cloud.position.x+=dt*(.11+i*.025);if(cloud.position.x>18)cloud.position.x=-18});renderer.render(scene,camera);requestAnimationFrame(frame)}
+function frame(){const dt=Math.min(clock.getDelta(),.05);updateFlight(dt);updateFlock(dt);updateComparison(dt);if(!state.reducedMotion)clouds.forEach((cloud,i)=>{cloud.position.x+=dt*(.11+i*.025);if(cloud.position.x>18)cloud.position.x=-18});renderer.render(scene,camera);requestAnimationFrame(frame)}
 frame();
