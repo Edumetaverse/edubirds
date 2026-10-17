@@ -30,6 +30,8 @@ The 3D labs use articulated vector mesh geometry rendered by Three.js. The bird'
 
 ## Artwork and third-party code
 
+The revised hero image, `assets/bushland-hero-v2.png`, was generated with a prompt to retain the hand-painted Australian bushland scene and all three birds while zooming out enough to show the kookaburra from crown to complete tail with clear margins.
+
 The bird portraits in `assets/` were generated for EduBirds. The hero prompt requested a hand-painted Australian bushland scene with a kookaburra, rainbow lorikeet and superb fairywren, leaving space for a headline. The first portrait prompt requested a six-bird contact sheet of rainbow lorikeet, laughing kookaburra, barn owl, little penguin, superb fairywren and flamingo. The second requested golden eagle, great horned owl, white-faced heron, scarlet macaw and male ruby-throated hummingbird in five cells of a six-cell contact sheet. The Torresian crow portrait was generated separately as a square natural-history illustration and saved as WebP for the site. The EDUmetaverse logo comes from the official EDUmetaverse website and is used in the banner on both pages.
 
 The `assets/vendor/` files are Three.js 0.186.1 from the npm package `three`. Its MIT license is included as `THREE-LICENSE.txt`.
