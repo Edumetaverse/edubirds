@@ -19,7 +19,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xcfe6e9);
 scene.fog = new THREE.Fog(0xcfe6e9, 20, 48);
 const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 100);
-const orbit = { yaw: 0.48, pitch: 0.25, radius: 14 };
+const orbit = { yaw: 0.32, pitch: 0.62, radius: 12.5 };
 function updateCamera() {
   const target = new THREE.Vector3(0, 2.7, 0);
   camera.position.set(
@@ -103,6 +103,38 @@ function ellipsoid(parent, material, position, scale, rotation) {
   parent.add(mesh);
   return mesh;
 }
+function feather(parent, material, baseX, baseZ, tipX, tipZ, width, y=0) {
+  const dx=tipX-baseX, dz=tipZ-baseZ;
+  const length=Math.hypot(dx,dz);
+  const px=-dz/length*width, pz=dx/length*width;
+  const shape=new THREE.Shape();
+  shape.moveTo(baseX-px*.38,baseZ-pz*.38);
+  shape.quadraticCurveTo(baseX+dx*.48-px,baseZ+dz*.48-pz,tipX,tipZ);
+  shape.quadraticCurveTo(baseX+dx*.48+px,baseZ+dz*.48+pz,baseX+px*.38,baseZ+pz*.38);
+  shape.closePath();
+  const geometry=new THREE.ExtrudeGeometry(shape,{depth:.025,bevelEnabled:true,bevelThickness:.012,bevelSize:.012,bevelSegments:1,curveSegments:6});
+  geometry.rotateX(Math.PI/2);
+  const mesh=new THREE.Mesh(geometry,material);
+  mesh.position.y=y;
+  mesh.castShadow=true;
+  parent.add(mesh);
+  return mesh;
+}
+function wingPanel(parent, material) {
+  const shape=new THREE.Shape();
+  shape.moveTo(-.03,.21);
+  shape.bezierCurveTo(.44,.39,1.03,.32,1.38,.27);
+  shape.bezierCurveTo(1.75,.29,2.08,.52,2.23,.43);
+  shape.lineTo(2.36,.14);
+  shape.bezierCurveTo(1.92,-.14,1.63,-.37,1.28,-.43);
+  shape.bezierCurveTo(.79,-.54,.29,-.37,-.05,-.12);
+  shape.closePath();
+  const geometry=new THREE.ExtrudeGeometry(shape,{depth:.07,bevelEnabled:true,bevelThickness:.025,bevelSize:.025,bevelSegments:1,curveSegments:8});
+  geometry.rotateX(Math.PI/2);
+  const mesh=new THREE.Mesh(geometry,material);
+  mesh.castShadow=true;
+  parent.add(mesh);
+}
 function makeBird(kind='eagle') {
   const eagle = kind === 'eagle';
   const bodyMat = eagle ? mats.eagleBody : mats.flockBody;
@@ -111,57 +143,67 @@ function makeBird(kind='eagle') {
   const chestMat = eagle ? mats.eagleChest : mats.flockChest;
   const group = new THREE.Group();
   const body = new THREE.Group();
+  if(eagle) body.scale.z=.7;
   group.add(body);
 
-  ellipsoid(body, bodyMat, [0,0,0], [.46,.33,.84]);
-  ellipsoid(body, chestMat, [0,-.18,.25], [.36,.23,.53]);
-  ellipsoid(body, eagle ? mats.eagleGold : bodyMat, [0,.21,.57], [.27,.25,.33]);
-  ellipsoid(body, eagle ? mats.eagleBody : bodyMat, [0,.29,.75], [.24,.21,.25]);
+  ellipsoid(body, bodyMat, [0,0,0], [.36,.29,.76]);
+  ellipsoid(body, chestMat, [0,-.13,.29], [.3,.21,.41]);
+  ellipsoid(body, eagle ? mats.eagleGold : bodyMat, [0,.14,.57], [.22,.2,.29]);
+  ellipsoid(body, bodyMat, [0,.19,.78], [.2,.19,.23]);
   if (eagle) {
-    for (let i=-2;i<=2;i++) ellipsoid(body,mats.eagleGold,[i*.09,.2,.49-i*.015],[.055,.1,.23],[.15,0,i*.11]);
+    for (let i=-2;i<=2;i++) feather(body,mats.eagleGold,i*.08,.54,i*.1,.19,.055,.28);
   }
-  const bill = new THREE.Mesh(new THREE.ConeGeometry(eagle?.13:.095,eagle?.38:.31,5),mats.beak);
+  const bill = new THREE.Mesh(new THREE.ConeGeometry(eagle?.09:.07,eagle?.25:.2,5),mats.beak);
   bill.rotation.x = Math.PI/2;
-  bill.position.set(0,.21,eagle?1.1:1.08);
+  bill.position.set(0,.12,eagle?1.02:.98);
   bill.castShadow = true;
   body.add(bill);
+  if(eagle){
+    const hook=new THREE.Mesh(new THREE.ConeGeometry(.037,.13,5),mats.eagleFeather);
+    hook.position.set(0,.045,1.15);
+    hook.rotation.z=Math.PI;
+    body.add(hook);
+  }
   for (const side of [-1,1]) {
-    ellipsoid(body,mats.eye,[side*.205,.36,.83],[.06,.06,.055]);
-    ellipsoid(body,mats.pupil,[side*.246,.365,.85],[.034,.037,.035]);
+    ellipsoid(body,mats.eye,[side*.18,.23,.82],[.035,.034,.035]);
+    ellipsoid(body,mats.pupil,[side*.209,.23,.84],[.023,.025,.025]);
     const foot = new THREE.Group();
     foot.position.set(side*.22,-.28,-.33);
     ellipsoid(foot,mats.foot,[0,-.12,0],[.045,.16,.055],[.35,0,0]);
     for (let i=-1;i<=1;i++) ellipsoid(foot,mats.foot,[i*.055,-.23,.08],[.025,.03,.16],[0,i*.18,0]);
     body.add(foot);
   }
-  for (let i=-2;i<=2;i++) ellipsoid(body,featherMat,[i*.095,-.035,-.87],[.09,.045,.51],[0,i*.13,0]);
+  for (let i=-3;i<=3;i++) feather(body,featherMat,i*.08,-.51,i*.15,-1.45+Math.abs(i)*.11,.09,-.045);
 
   const wings=[];
   for (const side of [-1,1]) {
     const wing = new THREE.Group();
-    wing.position.set(side*.36,.08,-.08);
-    wing.scale.x=side;
-    ellipsoid(wing,wingMat,[.61,0,-.04],[.78,.095,.29],[0,-.13,0]);
-    for (let i=0;i<6;i++) {
-      ellipsoid(wing,featherMat,[.83+i*.16,-.012,-.22-i*.025],[.33-i*.015,.037,.105],[0,-.1-i*.045,0]);
+    wing.position.set(side*.27,.08,-.06);
+    wing.scale.x=side*(eagle?1.35:1.1);
+    wingPanel(wing,wingMat);
+    for(let i=0;i<9;i++){
+      const x=.24+i*.17;
+      feather(wing,featherMat,x,-.23,x+.10,-.91+Math.abs(i-4)*.055,.095,-.025);
     }
-    for (let i=0;i<4;i++) {
-      ellipsoid(wing,wingMat,[.38+i*.23,.025,.08],[.25,.037,.1],[0,-.05,0]);
+    for(let i=0;i<5;i++){
+      const x=1.42+i*.17;
+      feather(wing,featherMat,x,.04,2.36+i*.075,-.63+i*.17,.095,-.012);
     }
+    for(let i=0;i<6;i++) feather(wing,eagle?mats.eagleGold:mats.flockChest,.14+i*.24,.02,.43+i*.23,-.22,.055,.09);
     body.add(wing);
     wings.push({wing,side});
   }
-  if (!eagle) group.scale.setScalar(.64);
+  if (!eagle) group.scale.setScalar(.48);
   group.userData.wings=wings;
   group.userData.animate=(phase,amplitude=1)=>{
-    for (const {wing} of wings) wing.rotation.z=Math.sin(phase)*.52*amplitude;
-    body.rotation.y=Math.sin(phase*.45)*.02;
+    for (const {wing} of wings) wing.rotation.z=Math.sin(phase)*.34*amplitude;
+    body.rotation.y=Math.sin(phase*.45)*.015;
   };
   return group;
 }
 
 const flightBird=makeBird('eagle');
-flightBird.scale.setScalar(2.75);
+flightBird.scale.setScalar(1.3);
 flightBird.rotation.y=-.12;
 scene.add(flightBird);
 const flockGroup=new THREE.Group();
@@ -170,9 +212,14 @@ flockGroup.visible=false;
 
 const state={
   mode:'flight',
-  flight:{wingbeat:2.8,spread:1,updraft:2,altitude:30,velocity:0,running:true,time:0},
+  flight:{updraft:0.5,startHeight:100,altitude:100,distance:0,running:true,time:0},
   flock:{size:16,separation:1.4,alignment:1,cohesion:.8,running:true,time:0}
 };
+// Golden eagle reference values: Chatterjee et al. (2007) Table 1 gives a
+// modelled cruise speed of 16 m/s; Garstang et al. (2022) use a conservative
+// best-glide sink rate of 0.75 m/s for straight, non-flapping flight.
+const EAGLE_CRUISE_MPS=16;
+const EAGLE_SINK_MPS=0.75;
 let agents=[];
 function randomRange(a,b){return a+Math.random()*(b-a)}
 function buildFlock(count){
@@ -197,20 +244,30 @@ function updateFlight(dt){
   const f=state.flight;
   if (!f.running) return;
   f.time+=dt;
-  const lift=f.wingbeat*.23*f.spread+f.updraft*.17+f.spread*.22;
-  const acceleration=lift-.98-f.velocity*.19;
-  f.velocity=THREE.MathUtils.clamp(f.velocity+acceleration*dt*2.2,-3.5,3.5);
-  f.altitude=THREE.MathUtils.clamp(f.altitude+f.velocity*dt*1.3,5,75);
-  if(f.altitude===5&&f.velocity<0)f.velocity=0;
-  if(f.altitude===75&&f.velocity>0)f.velocity=0;
-  flightBird.position.set(Math.sin(f.time*.55)*.22,1.1+f.altitude/18,Math.sin(f.time*.35)*.2);
+  // The chosen rising-air speed is a scenario input, not a field measurement.
+  // At the reference best-glide condition: ground-relative climb = air rise - sink.
+  const verticalSpeed=f.updraft-EAGLE_SINK_MPS;
+  f.altitude=Math.max(0,f.altitude+verticalSpeed*dt);
+  f.distance+=EAGLE_CRUISE_MPS*dt;
+  if(f.altitude===0){f.running=false;$('#flightToggle').textContent='Restart flight'}
+  // Scene height is schematic. The metre values above drive the readouts.
+  flightBird.position.set(Math.sin(f.time*.38)*.18,2.9+Math.min(2.2,(f.altitude-f.startHeight)/90),Math.sin(f.time*.24)*.14);
   flightBird.rotation.z=Math.sin(f.time*.7)*.035;
-  flightBird.rotation.x=-THREE.MathUtils.clamp(f.velocity*.045,-.16,.16);
-  for(const {wing,side} of flightBird.userData.wings)wing.scale.x=side*f.spread;
-  flightBird.userData.animate(f.time*Math.PI*2*f.wingbeat,f.wingbeat<.1?.03:Math.min(1.2,.35+f.wingbeat*.18));
+  flightBird.rotation.x=-Math.sign(verticalSpeed)*.025;
+  flightBird.userData.animate(f.time*1.2,.08);
+  updateFlightReadout();
+}
+function updateFlightReadout(){
+  const f=state.flight;
+  const verticalSpeed=f.updraft-EAGLE_SINK_MPS;
   $('#altitudeValue').textContent=`${Math.round(f.altitude)} m`;
-  $('#flightModeValue').textContent=f.wingbeat<.1?(f.updraft>3?'Soaring':'Gliding'):'Flapping';
-  $('#trendValue').textContent=f.velocity>.08?'Rising':f.velocity<-.08?'Falling':'Steady';
+  $('#flightModeValue').textContent=verticalSpeed>.01?'Soaring':verticalSpeed<-.01?'Gliding':'Level';
+  $('#trendValue').textContent=`${verticalSpeed>=0?'+':''}${verticalSpeed.toFixed(2)} m/s`;
+  $('#distanceValue').textContent=`${(f.distance/1000).toFixed(2)} km`;
+  $('#elapsedValue').textContent=`${Math.floor(f.time)} s`;
+  const afterMinute=Math.max(0,f.startHeight+verticalSpeed*60);
+  $('#predictionValue').textContent=`${Math.round(afterMinute)} m`;
+  $('#scenarioMode').textContent=verticalSpeed>.01?'Rising air lifts the eagle faster than it sinks.':verticalSpeed<-.01?'The eagle loses height while it glides.':'Rising air exactly balances the assumed sink rate.';
 }
 function updateFlock(dt){
   const f=state.flock;
@@ -262,24 +319,24 @@ function updateFlock(dt){
       spacing+=nearest;
       speed+=agents[i].velocity.length();
     }
-    $('#spacingValue').textContent=`${(spacing/agents.length).toFixed(1)} m`;
-    $('#speedValue').textContent=`${(speed/agents.length).toFixed(1)} m/s`;
+    $('#spacingValue').textContent=`${(spacing/agents.length).toFixed(1)} units`;
+    $('#speedValue').textContent=`${(speed/agents.length).toFixed(1)} units/s`;
   }
 }
 
-const flightInputs=[['wingbeat',v=>v,'wingbeatOutput',v=>`${Number(v).toFixed(1)} / s`],['spread',v=>v/100,'spreadOutput',v=>`${v}%`],['updraft',v=>v,'updraftOutput',v=>`${Number(v).toFixed(1)} / 6`]];
-for(const [id,convert,output,format] of flightInputs){$("#"+id).addEventListener('input',event=>{state.flight[id]=Number(convert(event.target.value));$("#"+output).textContent=format(event.target.value)})}
+$('#updraft').addEventListener('input',event=>{const f=state.flight;f.updraft=Number(event.target.value);f.altitude=f.startHeight;f.distance=0;f.time=0;f.running=true;$('#flightToggle').textContent='Pause flight';$('#updraftOutput').textContent=`${f.updraft.toFixed(2)} m/s`;updateFlightReadout()});
+$('#startHeight').addEventListener('input',event=>{const value=Number(event.target.value);state.flight.startHeight=value;state.flight.altitude=value;state.flight.distance=0;state.flight.time=0;state.flight.running=true;$('#startHeightOutput').textContent=`${value} m`;$('#flightToggle').textContent='Pause flight';updateFlightReadout()});
 const flockInputs=[['separation','separationOutput'],['alignment','alignmentOutput'],['cohesion','cohesionOutput']];
 for(const [id,output] of flockInputs){$("#"+id).addEventListener('input',event=>{state.flock[id]=Number(event.target.value);$("#"+output).textContent=Number(event.target.value).toFixed(1)})}
 $('#flockSize').addEventListener('input',event=>{$('#flockSizeOutput').textContent=event.target.value});
 $('#flockSize').addEventListener('change',event=>{state.flock.size=Number(event.target.value);buildFlock(state.flock.size)});
 
-$('#flightToggle').addEventListener('click',()=>{state.flight.running=!state.flight.running;$('#flightToggle').textContent=state.flight.running?'Pause flight':'Resume flight'});
+$('#flightToggle').addEventListener('click',()=>{if(state.flight.altitude===0){state.flight.altitude=state.flight.startHeight;state.flight.distance=0;state.flight.time=0}state.flight.running=!state.flight.running;$('#flightToggle').textContent=state.flight.running?'Pause flight':'Resume flight';updateFlightReadout()});
 $('#flockToggle').addEventListener('click',()=>{state.flock.running=!state.flock.running;$('#flockToggle').textContent=state.flock.running?'Pause flock':'Resume flock'});
 $('#flightReset').addEventListener('click',()=>{
-  Object.assign(state.flight,{wingbeat:2.8,spread:1,updraft:2,altitude:30,velocity:0,running:true,time:0});
-  $('#wingbeat').value='2.8';$('#spread').value='100';$('#updraft').value='2';
-  $('#wingbeatOutput').textContent='2.8 / s';$('#spreadOutput').textContent='100%';$('#updraftOutput').textContent='2.0 / 6';$('#flightToggle').textContent='Pause flight';
+  Object.assign(state.flight,{updraft:0.5,startHeight:100,altitude:100,distance:0,running:true,time:0});
+  $('#updraft').value='0.5';$('#startHeight').value='100';
+  $('#updraftOutput').textContent='0.50 m/s';$('#startHeightOutput').textContent='100 m';$('#flightToggle').textContent='Pause flight';updateFlightReadout();
 });
 $('#flockReset').addEventListener('click',()=>{
   Object.assign(state.flock,{size:16,separation:1.4,alignment:1,cohesion:.8,running:true,time:0});
@@ -294,8 +351,9 @@ function setMode(mode){
   flightBird.visible=flight;flockGroup.visible=!flight;
   $('#flightControls').hidden=!flight;$('#flockControls').hidden=flight;
   $('#flightReadout').hidden=!flight;$('#flockReadout').hidden=flight;
-  $('#labTitle').textContent=flight?'How does a bird stay in the air?':'How does a flock move together?';
-  $('#stageLabel').textContent=flight?'GOLDEN EAGLE · FLIGHT MODEL':'MODEL BIRDS · FLOCKING RULES';
+  $('#flightExtra').hidden=!flight;
+  $('#labTitle').textContent=flight?'When can a golden eagle soar?':'How does a flock move together?';
+  $('#stageLabel').textContent=flight?'GOLDEN EAGLE · SOARING MODEL':'MODEL BIRDS · FLOCKING RULES';
   $('#flightTab').setAttribute('aria-selected',String(flight));$('#flockTab').setAttribute('aria-selected',String(!flight));
   $('#flightTab').tabIndex=flight?0:-1;$('#flockTab').tabIndex=flight?-1:0;
 }
@@ -303,6 +361,7 @@ $('#flightTab').addEventListener('click',()=>setMode('flight'));
 $('#flockTab').addEventListener('click',()=>setMode('flock'));
 for(const tab of [$('#flightTab'),$('#flockTab')])tab.addEventListener('keydown',event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();const next=state.mode==='flight'?'flock':'flight';setMode(next);$(next==='flight'?'#flightTab':'#flockTab').focus()}});
 setMode('flight');
+updateFlightReadout();
 
 const pointers=new Map();
 let previousPinch=0;

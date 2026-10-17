@@ -21,12 +21,12 @@ In **Settings → Pages**, choose **Deploy from a branch**, then select **main**
 - Explore bird basics, 11 field guide profiles and adaptations of beaks, feet and feathers.
 - Filter birds by habitat and open illustrated field notes.
 - Compare flight, swimming, hovering and soaring.
-- Use a 3D flight lab to test wingbeat rate, wing spread and rising air, and a 3D flocking lab to test spacing, direction matching and cohesion.
+- Use a 3D golden eagle soaring lab to test rising air and starting height, and a 3D flocking lab to test spacing, direction matching and cohesion.
 - Answer seven beak questions and five habitat challenges.
 - Save up to ten field observations in browser storage. Notes stay on the device.
 - Visit the [virtual Aviary](https://framevr.io/eduaviary2).
 
-The 3D labs use articulated mesh geometry rendered by Three.js. Their flight values and flock rules are simplified teaching models, not measurements of real birds. The simulations do not use SVG. The field guide uses generated raster illustrations, not bird photographs. Models and illustrations are representative and should be compared with real observations.
+The 3D labs use articulated mesh geometry rendered by Three.js. The soaring calculation uses a modelled golden eagle cruise speed of 16 m/s from Chatterjee et al. (2007) and a conservative best glide sink rate of 0.75 m/s used by Garstang et al. (2022). The student chooses the rising air speed and starting height. The calculation assumes a straight glide in steady air: vertical speed = rising air speed − 0.75 m/s; horizontal distance = 16 m/s × elapsed time. It does not simulate turns, changing wing posture, wind drift or powered flapping. The 3D scene is schematically scaled. Flocking follows adjustable teaching rules and reports model units, not measured metres. The birds are custom 3D feather meshes rather than SVGs. The field guide uses generated raster illustrations, not bird photographs. Models and illustrations are representative and should be compared with real observations.
 
 ## Artwork and third-party code
 
@@ -43,6 +43,8 @@ The `assets/vendor/` files are Three.js 0.186.1 from the npm package `three`. It
 - [New Zealand Birds Online: white-faced heron](https://nzbirdsonline.org.nz/species/white-faced-heron)
 - [Animal Diversity Web: scarlet macaw](https://animaldiversity.org/accounts/Ara_macao/)
 - [Cornell Lab: ruby-throated hummingbird](https://www.allaboutbirds.org/guide/Ruby-throated_Hummingbird/overview)
+- [Chatterjee et al. (2007): aerodynamic data, Table 1](https://www.pnas.org/doi/10.1073/pnas.0702040104)
+- [Garstang et al. (2022): instrumented golden eagle flight](https://pmc.ncbi.nlm.nih.gov/articles/PMC9179650/)
 - [NSW Curriculum: Science and Technology K–6 (2024)](https://curriculum.nsw.edu.au/learning-areas/science/science-and-technology-k-6-2024/overview)
 
 EduBirds is written for Stage 2–3 learners. It does not claim formal syllabus outcome mapping.
