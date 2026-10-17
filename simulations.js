@@ -19,7 +19,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xcfe6e9);
 scene.fog = new THREE.Fog(0xcfe6e9, 20, 48);
 const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 100);
-const orbit = { yaw: 0.72, pitch: 0.46, radius: 9.2 };
+const orbit = { yaw: 0.18, pitch: 0.30, radius: 9.2 };
 function updateCamera() {
   const target = new THREE.Vector3(0, 2.7, 0);
   camera.position.set(
@@ -125,11 +125,22 @@ function feather(parent, material, baseX, baseZ, tipX, tipZ, width, y=0) {
 function wingPanel(parent, material) {
   const shape=new THREE.Shape();
   shape.moveTo(-.03,.21);
-  shape.bezierCurveTo(.44,.39,1.03,.32,1.38,.27);
-  shape.bezierCurveTo(1.75,.29,2.08,.52,2.23,.43);
-  shape.lineTo(2.36,.14);
-  shape.bezierCurveTo(1.92,-.14,1.63,-.37,1.28,-.43);
-  shape.bezierCurveTo(.79,-.54,.29,-.37,-.05,-.12);
+  shape.bezierCurveTo(.44,.39,1.03,.32,1.36,.22);
+  shape.lineTo(1.38,-.29);
+  shape.bezierCurveTo(1.04,-.46,.47,-.49,-.05,-.12);
+  shape.closePath();
+  const geometry=new THREE.ExtrudeGeometry(shape,{depth:.07,bevelEnabled:true,bevelThickness:.025,bevelSize:.025,bevelSegments:1,curveSegments:8});
+  geometry.rotateX(Math.PI/2);
+  const mesh=new THREE.Mesh(geometry,material);
+  mesh.castShadow=true;
+  parent.add(mesh);
+}
+function wristPanel(parent, material) {
+  const shape=new THREE.Shape();
+  shape.moveTo(-.07,.19);
+  shape.bezierCurveTo(.34,.28,.89,.49,1.18,.38);
+  shape.lineTo(1.35,.12);
+  shape.bezierCurveTo(1.09,-.24,.42,-.40,-.08,-.29);
   shape.closePath();
   const geometry=new THREE.ExtrudeGeometry(shape,{depth:.07,bevelEnabled:true,bevelThickness:.025,bevelSize:.025,bevelSegments:1,curveSegments:8});
   geometry.rotateX(Math.PI/2);
@@ -183,23 +194,35 @@ function makeBird(kind='eagle') {
     wing.position.set(side*.27,.08,-.06);
     wing.scale.x=side*(eagle?1.35:1.1);
     wingPanel(wing,wingMat);
-    for(let i=0;i<9;i++){
-      const x=.24+i*.17;
-      feather(wing,featherMat,x,-.23,x+.10,-.91+Math.abs(i-4)*.055,.095,-.025);
+    for(let i=0;i<7;i++){
+      const x=.20+i*.17;
+      feather(wing,featherMat,x,-.22,x+.11,-.83+Math.abs(i-3)*.055,.105,-.025);
     }
+    const wrist=new THREE.Group();
+    wrist.position.set(1.27,0,-.02);
+    wristPanel(wrist,wingMat);
     for(let i=0;i<5;i++){
-      const x=1.42+i*.17;
-      feather(wing,featherMat,x,.04,2.36+i*.075,-.63+i*.17,.095,-.012);
+      const x=.16+i*.18;
+      feather(wrist,featherMat,x,.03,1.18+i*.085,-.73+i*.16,.12,-.012);
     }
     for(let i=0;i<6;i++) feather(wing,eagle?mats.eagleGold:mats.flockChest,.14+i*.24,.02,.43+i*.23,-.22,.055,.09);
+    wing.add(wrist);
     body.add(wing);
-    wings.push({wing,side});
+    wings.push({wing,wrist,side});
   }
   if (!eagle) group.scale.setScalar(.48);
   group.userData.wings=wings;
+  group.userData.bill=bill;
   group.userData.animate=(phase,amplitude=1)=>{
-    for (const {wing} of wings) wing.rotation.z=Math.sin(phase)*.34*amplitude;
-    body.rotation.y=Math.sin(phase*.45)*.015;
+    const stroke=Math.cos(phase);
+    const recovery=Math.max(0,-Math.sin(phase));
+    for (const {wing,wrist,side} of wings) {
+      wing.rotation.z=side*(.06+1.04*stroke)*amplitude;
+      wing.rotation.x=.06*Math.sin(phase)*amplitude;
+      wrist.rotation.y=.52*recovery*amplitude;
+      wrist.rotation.z=-.25*recovery*amplitude;
+    }
+    body.rotation.y=Math.sin(phase)*.012*amplitude;
   };
   return group;
 }
@@ -207,7 +230,40 @@ function makeBird(kind='eagle') {
 const flightBird=makeBird('small');
 flightBird.scale.setScalar(1.25);
 flightBird.rotation.y=-.12;
+flightBird.position.y=2.9;
 scene.add(flightBird);
+const comparisonGroup=new THREE.Group();
+scene.add(comparisonGroup);
+const comparisonBirds={
+  eagle:{name:'Golden eagle',fact:'Broad wings help it soar and glide for long stretches.',rate:1.2,kind:'eagle'},
+  owl:{name:'Great horned owl',fact:'Broad, softly edged flight feathers help it approach prey quietly.',rate:1.8,kind:'owl'},
+  hummingbird:{name:'Ruby-throated hummingbird',fact:'Small wings beat rapidly so it can hover at flowers.',rate:4.5,kind:'hummingbird'}
+};
+const comparisonPairs={
+  'soar-hover':{left:'eagle',right:'hummingbird',question:'Which bird can stay near one flower, and which can travel on rising air?'},
+  'quiet-hover':{left:'owl',right:'hummingbird',question:'How do soft, quiet feathers and rapid hovering wings help with different kinds of food?'},
+  'soar-quiet':{left:'eagle',right:'owl',question:'Both birds have broad wings. How is quiet flight different from soaring?'}
+};
+const comparisonModels={};
+for(const [key,bird] of Object.entries(comparisonBirds)){
+  const model=makeBird(bird.kind==='eagle'?'eagle':'small');
+  if(key==='eagle')model.scale.setScalar(.70);
+  if(key==='owl')model.scale.setScalar(.80);
+  if(key==='hummingbird')model.scale.setScalar(.68);
+  if(key!=='eagle'){
+    const colours=key==='owl'?new Map([[mats.flockBody,0x745841],[mats.flockWing,0x795f48],[mats.flockFeather,0x574739],[mats.flockChest,0xb8a082]]):new Map([[mats.flockBody,0x23815c],[mats.flockWing,0x20704f],[mats.flockFeather,0x175a49],[mats.flockChest,0xe5ddd0]]);
+    model.traverse(object=>{if(object.isMesh&&colours.has(object.material)){const original=object.material;object.material=original.clone();object.material.color.setHex(colours.get(original))}});
+  }
+  for(const {wing,side} of model.userData.wings){
+    if(key==='owl'){wing.scale.x=side*1.3;wing.scale.z=1.22}
+    if(key==='hummingbird'){wing.scale.x=side*.84;wing.scale.z=.72}
+  }
+  if(key==='hummingbird')model.userData.bill.scale.set(.62,2.0,.62);
+  model.rotation.y=-.12;
+  model.visible=false;
+  comparisonGroup.add(model);
+  comparisonModels[key]=model;
+}
 const liftArrow=new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(-2.2,1.9,.7),2.2,0x2d9a72,.48,.3);
 const weightArrow=new THREE.ArrowHelper(new THREE.Vector3(0,-1,0),new THREE.Vector3(2.2,5.0,.7),2.2,0xd66a49,.48,.3);
 const thrustArrow=new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(-3.4,2.3,-1.3),1.8,0xb776bf,.5,.32);
@@ -227,8 +283,9 @@ flockGroup.visible=false;
 
 const state={
   mode:'flight',
-  flight:{airspeed:16,spread:1,flapping:true,time:0},
-  flock:{size:16,separation:1.4,alignment:1,cohesion:.8,running:true,time:0}
+  flight:{airspeed:14,spread:1,beatRate:3,style:'alternate',time:0,altitude:30,verticalSpeed:0,running:true,readoutTime:0,wingAmplitude:1},
+  flock:{size:16,separation:1.4,alignment:1,cohesion:.8,running:true,time:0},
+  comparison:{pair:'soar-hover',time:0}
 };
 // Chatterjee et al. (2007), Table 1: mass 4.6 kg, weight 45 N,
 // wing area 0.65 m², modelled cruise speed 16 m/s. NASA's lift equation is
@@ -237,13 +294,28 @@ const state={
 const REFERENCE_SPEED_MPS=16;
 const REFERENCE_WEIGHT_N=45;
 const REFERENCE_WING_AREA_M2=.65;
+const REFERENCE_MASS_KG=4.6;
 const AIR_DENSITY_KG_M3=1.225;
+// This additional lift is an explicit teaching-model assumption, not a
+// measured force for every bird. The 3 s alternation is also illustrative.
+const FLAP_LIFT_N_PER_HZ=5;
+const VERTICAL_DRAG_N_PER_MPS_SQUARED=1.5;
+const ALTITUDE_MIN_M=0;
+const ALTITUDE_MAX_M=60;
 const REFERENCE_CL=REFERENCE_WEIGHT_N/(.5*AIR_DENSITY_KG_M3*REFERENCE_SPEED_MPS**2*REFERENCE_WING_AREA_M2);
+function wingsPowered(){
+  const f=state.flight;
+  return f.style==='flap'||(f.style==='alternate'&&Math.floor(f.time/3)%2===0);
+}
+function beatLabel(rate){return `${rate} ${rate===1?'beat':'beats'}/s`}
 function flightForces(){
   const f=state.flight;
   const area=REFERENCE_WING_AREA_M2*f.spread;
-  const lift=.5*AIR_DENSITY_KG_M3*f.airspeed**2*area*REFERENCE_CL;
-  return {area,lift,weight:REFERENCE_WEIGHT_N,net:lift-REFERENCE_WEIGHT_N};
+  const airflowLift=.5*AIR_DENSITY_KG_M3*f.airspeed**2*area*REFERENCE_CL;
+  const beatLift=wingsPowered()?f.beatRate*FLAP_LIFT_N_PER_HZ:0;
+  const totalLift=airflowLift+beatLift;
+  const verticalDrag=-VERTICAL_DRAG_N_PER_MPS_SQUARED*f.verticalSpeed*Math.abs(f.verticalSpeed);
+  return {area,airflowLift,beatLift,totalLift,weight:REFERENCE_WEIGHT_N,verticalDrag,net:totalLift-REFERENCE_WEIGHT_N+verticalDrag};
 }
 let agents=[];
 function randomRange(a,b){return a+Math.random()*(b-a)}
@@ -266,35 +338,56 @@ function buildFlock(count){
 buildFlock(state.flock.size);
 
 function updateFlight(dt){
+  if(state.mode!=='flight')return;
   const f=state.flight;
-  f.time+=dt;
+  if(f.running){
+    f.time+=dt;
+    const forces=flightForces();
+    f.verticalSpeed+=forces.net/REFERENCE_MASS_KG*dt;
+    f.altitude=THREE.MathUtils.clamp(f.altitude+f.verticalSpeed*dt,ALTITUDE_MIN_M,ALTITUDE_MAX_M);
+    if((f.altitude===ALTITUDE_MIN_M&&f.verticalSpeed<0)||(f.altitude===ALTITUDE_MAX_M&&f.verticalSpeed>0))f.verticalSpeed=0;
+  }
   const forces=flightForces();
-  const targetY=2.9+THREE.MathUtils.clamp(forces.net/45,-.7,.7);
-  const displayY=targetY+(f.flapping?Math.sin(f.time*13)*.09:0);
-  flightBird.position.y=THREE.MathUtils.damp(flightBird.position.y,displayY,3.8,dt);
-  flightBird.position.x=Math.sin(f.time*.9)*.07;
-  flightBird.rotation.z=THREE.MathUtils.damp(flightBird.rotation.z,THREE.MathUtils.clamp(forces.net/140,-.21,.21),3.5,dt);
-  flightBird.rotation.x=Math.sin(f.time*1.5)*.015;
+  // Keep every metre in the 0–60 m experiment visible, including takeoff.
+  const targetY=1.25+(f.altitude/ALTITUDE_MAX_M)*3.3;
+  flightBird.position.y=THREE.MathUtils.damp(flightBird.position.y,targetY,5,dt);
+  flightBird.position.x=0;
+  flightBird.rotation.z=THREE.MathUtils.damp(flightBird.rotation.z,THREE.MathUtils.clamp(f.verticalSpeed/18,-.13,.13),3.5,dt);
+  flightBird.rotation.x=0;
   for(const {wing,side} of flightBird.userData.wings)wing.scale.x=side*1.1*f.spread;
-  flightBird.userData.animate(f.time*(f.flapping?13:1.6),f.flapping?.85:.07);
+  f.wingAmplitude=THREE.MathUtils.damp(f.wingAmplitude,wingsPowered()?1:0,5,dt);
+  flightBird.userData.animate(f.time*f.beatRate*Math.PI*2,f.wingAmplitude);
   liftArrow.position.set(-2.2,flightBird.position.y-1.55,.7);
   weightArrow.position.set(2.2,flightBird.position.y+1.4,.7);
-  liftArrow.setLength(THREE.MathUtils.clamp(forces.lift/22,.6,2.7),.48,.3);
+  liftArrow.setLength(THREE.MathUtils.clamp(forces.totalLift/22,.6,2.7),.48,.3);
   weightArrow.setLength(2.05,.48,.3);
-  thrustArrow.visible=f.flapping&&state.mode==='flight';
-  dragArrow.setLength(THREE.MathUtils.clamp(1.35*(f.airspeed/16)**2,.5,2.6),.5,.32);
+  thrustArrow.visible=wingsPowered();
+  thrustArrow.position.y=flightBird.position.y-.6;
+  thrustArrow.setLength(1.15+f.beatRate*.16,.5,.32);
+  const forwardDrag=8*(f.airspeed/16)**2;
+  dragArrow.position.y=flightBird.position.y-.6;
+  dragArrow.setDirection(new THREE.Vector3(0,forces.verticalDrag,-forwardDrag).normalize());
+  dragArrow.setLength(THREE.MathUtils.clamp(Math.hypot(forwardDrag,forces.verticalDrag)/7,.5,2.6),.5,.32);
   for(const streak of airflow){streak.position.z+=dt*f.airspeed*.24;if(streak.position.z>6)streak.position.z=-6}
+  f.readoutTime+=dt;
+  if(f.readoutTime>.12){f.readoutTime=0;updateFlightReadout()}
 }
 function updateFlightReadout(){
-  const {area,lift,weight,net}=flightForces();
-  $('#liftValue').textContent=`${lift.toFixed(1)} N`;
+  const f=state.flight;
+  const {totalLift,weight,net}=flightForces();
+  $('#liftValue').textContent=`${totalLift.toFixed(1)} N`;
   $('#weightValue').textContent=`${weight.toFixed(1)} N`;
   $('#netValue').textContent=`${net>=0?'+':''}${net.toFixed(1)} N`;
-  $('#areaValue').textContent=`${area.toFixed(2)} m²`;
-  $('#speedValueFlight').textContent=`${state.flight.airspeed} m/s`;
-  const balance=net>2?'Airflow lift exceeds weight.':net< -2?'Weight exceeds airflow lift.':'Airflow lift and weight nearly balance.';
-  const result=state.flight.flapping?`${balance} Wingbeats also push air down and back for lift and thrust.`:`${balance} With no wingbeats, the bird glides.`;
-  $('#resultValue').textContent=state.flight.flapping?'Flapping':'Gliding';
+  $('#heightValue').textContent=`${f.altitude.toFixed(1)} m`;
+  $('#verticalSpeedValue').textContent=`${f.verticalSpeed>=0?'+':''}${f.verticalSpeed.toFixed(1)} m/s`;
+  $('#beatValue').textContent=wingsPowered()?beatLabel(f.beatRate):'Gliding';
+  $('#altitudeMarker').style.bottom=`${100*f.altitude/ALTITUDE_MAX_M}%`;
+  const motion=f.verticalSpeed>.15?'Rising':f.verticalSpeed<-.15?'Sinking':'Level for now';
+  const force=net>1?'upward force is stronger':net< -1?'downward force is stronger':'vertical forces are balanced';
+  const phase=f.style==='alternate'?(wingsPowered()?'Flap phase':'Glide phase'):(wingsPowered()?'Flapping':'Gliding');
+  const slowing=(f.verticalSpeed>.15&&net< -1)||(f.verticalSpeed<-.15&&net>1);
+  const boundary=f.altitude===ALTITUDE_MAX_M&&net>0?' The bird reached the top of this experiment.':f.altitude===ALTITUDE_MIN_M&&net<0?' At 0 m, add enough lift to exceed weight and take off again.':f.altitude<.2&&net>0?' Lift now exceeds weight, so the bird is taking off again.':'';
+  const result=`${phase} · ${motion}. The ${force}.${slowing?' It is slowing before it changes direction.':''}${boundary}`;
   $('#scenarioMode').textContent=result;
   $('#sceneCallout').textContent=result;
 }
@@ -352,22 +445,61 @@ function updateFlock(dt){
     $('#speedValue').textContent=`${(speed/agents.length).toFixed(1)} units/s`;
   }
 }
+function selectComparison(key){
+  const pair=comparisonPairs[key];
+  state.comparison.pair=key;
+  for(const [name,model] of Object.entries(comparisonModels))model.visible=name===pair.left||name===pair.right;
+  comparisonModels[pair.left].position.set(-2.45,2.75,0);
+  comparisonModels[pair.right].position.set(2.45,2.75,0);
+  for(const [side,name] of [['Left',pair.left],['Right',pair.right]]){
+    const bird=comparisonBirds[name];
+    $('#compare'+side+'Label').textContent=bird.name;
+    $('#compare'+side+'Name').textContent=bird.name;
+    $('#compare'+side+'Fact').textContent=bird.fact;
+    const portrait=$('#compare'+side+'Portrait');
+    portrait.className=`compare-portrait bird-${name}`;
+    portrait.setAttribute('aria-label',`Generated illustration of a ${bird.name.toLowerCase()}`);
+  }
+  $('#compareQuestion').textContent=pair.question;
+  document.querySelectorAll('[data-comparison]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.comparison===key)));
+}
+function updateComparison(dt){
+  if(state.mode!=='compare')return;
+  state.comparison.time+=dt;
+  for(const [name,model] of Object.entries(comparisonModels)){
+    if(!model.visible)continue;
+    const rate=comparisonBirds[name].rate;
+    model.userData.animate(state.comparison.time*rate*Math.PI*2,name==='eagle'?.55:name==='owl'?.7:.9);
+    model.position.y=2.75+Math.sin(state.comparison.time*rate*Math.PI*2)*.07;
+  }
+}
+document.querySelectorAll('[data-comparison]').forEach(button=>button.addEventListener('click',()=>selectComparison(button.dataset.comparison)));
+selectComparison(state.comparison.pair);
 
 $('#airspeed').addEventListener('input',event=>{state.flight.airspeed=Number(event.target.value);$('#airspeedOutput').textContent=`${state.flight.airspeed} m/s`;updateFlightReadout()});
 $('#spread').addEventListener('input',event=>{state.flight.spread=Number(event.target.value)/100;$('#spreadOutput').textContent=`${event.target.value}%`;updateFlightReadout()});
-function setFlightStyle(flapping){state.flight.flapping=flapping;$('#flapButton').setAttribute('aria-pressed',String(flapping));$('#glideButton').setAttribute('aria-pressed',String(!flapping));updateFlightReadout()}
-$('#flapButton').addEventListener('click',()=>setFlightStyle(true));
-$('#glideButton').addEventListener('click',()=>setFlightStyle(false));
+$('#beatRate').addEventListener('input',event=>{state.flight.beatRate=Number(event.target.value);$('#beatRateOutput').textContent=beatLabel(state.flight.beatRate);updateFlightReadout()});
+function setFlightStyle(style){
+  state.flight.style=style;
+  state.flight.time=0;
+  for(const [id,value] of [['flapButton','flap'],['glideButton','glide'],['alternateButton','alternate']])$('#'+id).setAttribute('aria-pressed',String(style===value));
+  updateFlightReadout();
+}
+$('#flapButton').addEventListener('click',()=>setFlightStyle('flap'));
+$('#glideButton').addEventListener('click',()=>setFlightStyle('glide'));
+$('#alternateButton').addEventListener('click',()=>setFlightStyle('alternate'));
 const flockInputs=[['separation','separationOutput'],['alignment','alignmentOutput'],['cohesion','cohesionOutput']];
 for(const [id,output] of flockInputs){$("#"+id).addEventListener('input',event=>{state.flock[id]=Number(event.target.value);$("#"+output).textContent=Number(event.target.value).toFixed(1)})}
 $('#flockSize').addEventListener('input',event=>{$('#flockSizeOutput').textContent=event.target.value});
 $('#flockSize').addEventListener('change',event=>{state.flock.size=Number(event.target.value);buildFlock(state.flock.size)});
 
 $('#flockToggle').addEventListener('click',()=>{state.flock.running=!state.flock.running;$('#flockToggle').textContent=state.flock.running?'Pause flock':'Resume flock'});
+$('#flightToggle').addEventListener('click',()=>{state.flight.running=!state.flight.running;$('#flightToggle').textContent=state.flight.running?'Pause flight':'Resume flight'});
 $('#flightReset').addEventListener('click',()=>{
-  Object.assign(state.flight,{airspeed:16,spread:1,flapping:true,time:0});
-  $('#airspeed').value='16';$('#spread').value='100';
-  $('#airspeedOutput').textContent='16 m/s';$('#spreadOutput').textContent='100%';setFlightStyle(true);
+  Object.assign(state.flight,{airspeed:14,spread:1,beatRate:3,style:'alternate',time:0,altitude:30,verticalSpeed:0,running:true,readoutTime:0,wingAmplitude:1});
+  $('#airspeed').value='14';$('#spread').value='100';$('#beatRate').value='3';
+  $('#airspeedOutput').textContent='14 m/s';$('#spreadOutput').textContent='100%';$('#beatRateOutput').textContent='3 beats/s';
+  $('#flightToggle').textContent='Pause flight';setFlightStyle('alternate');
 });
 $('#flockReset').addEventListener('click',()=>{
   Object.assign(state.flock,{size:16,separation:1.4,alignment:1,cohesion:.8,running:true,time:0});
@@ -376,24 +508,36 @@ $('#flockReset').addEventListener('click',()=>{
   buildFlock(16);
 });
 
+let previousOrbit=null;
 function setMode(mode){
+  if(mode==='compare'&&state.mode!=='compare'){
+    previousOrbit={...orbit};
+    Object.assign(orbit,{yaw:.16,pitch:.32,radius:8.3*Math.max(1,1.32/camera.aspect)});
+    updateCamera();
+  }else if(state.mode==='compare'&&mode!=='compare'&&previousOrbit){
+    Object.assign(orbit,previousOrbit);
+    updateCamera();
+  }
   state.mode=mode;
   const flight=mode==='flight';
-  flightBird.visible=flight;flockGroup.visible=!flight;
-  ground.visible=!flight;hills.forEach(hill=>hill.visible=!flight);
-  liftArrow.visible=flight;weightArrow.visible=flight;dragArrow.visible=flight;thrustArrow.visible=flight&&state.flight.flapping;airflow.forEach(item=>item.visible=flight);
-  $('#flightControls').hidden=!flight;$('#flockControls').hidden=flight;
-  $('#flightReadout').hidden=!flight;$('#flockReadout').hidden=flight;
+  const flock=mode==='flock';
+  const compare=mode==='compare';
+  flightBird.visible=flight;flockGroup.visible=flock;comparisonGroup.visible=compare;
+  ground.visible=flock;hills.forEach(hill=>hill.visible=flock);
+  liftArrow.visible=flight;weightArrow.visible=flight;dragArrow.visible=flight;thrustArrow.visible=flight&&wingsPowered();airflow.forEach(item=>item.visible=flight);
+  $('#flightControls').hidden=!flight;$('#flockControls').hidden=!flock;$('#compareControls').hidden=!compare;
+  $('#flightReadout').hidden=!flight;$('#flockReadout').hidden=!flock;
   $('#flightExtra').hidden=!flight;
-  $('#labTitle').textContent=flight?'How do birds fly?':'How does a flock move together?';
-  $('#stageLabel').textContent=flight?'BIRD FLIGHT · 3D FORCE MODEL':'MODEL BIRDS · FLOCKING RULES';
-  $('#forceKey').hidden=!flight;$('#sceneCallout').hidden=!flight;
-  $('#flightTab').setAttribute('aria-selected',String(flight));$('#flockTab').setAttribute('aria-selected',String(!flight));
-  $('#flightTab').tabIndex=flight?0:-1;$('#flockTab').tabIndex=flight?-1:0;
+  $('#labTitle').textContent=flight?'How do birds fly?':flock?'How does a flock move together?':'How do wings fit different jobs?';
+  $('#stageLabel').textContent=flight?'BIRD FLIGHT · 3D FORCE MODEL':flock?'MODEL BIRDS · FLOCKING RULES':'WING ADAPTATIONS · SIMPLIFIED 3D MODELS';
+  $('#forceKey').hidden=!flight;$('#sceneCallout').hidden=!flight;$('#altitudeMeter').hidden=!flight;
+  $('#compareStageLabels').hidden=!compare;
+  for(const [name,tab] of [['flight','#flightTab'],['flock','#flockTab'],['compare','#compareTab']]){$(tab).setAttribute('aria-selected',String(mode===name));$(tab).tabIndex=mode===name?0:-1}
 }
 $('#flightTab').addEventListener('click',()=>setMode('flight'));
 $('#flockTab').addEventListener('click',()=>setMode('flock'));
-for(const tab of [$('#flightTab'),$('#flockTab')])tab.addEventListener('keydown',event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();const next=state.mode==='flight'?'flock':'flight';setMode(next);$(next==='flight'?'#flightTab':'#flockTab').focus()}});
+$('#compareTab').addEventListener('click',()=>setMode('compare'));
+for(const tab of [$('#flightTab'),$('#flockTab'),$('#compareTab')])tab.addEventListener('keydown',event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();const modes=['flight','flock','compare'];const direction=event.key==='ArrowRight'?1:-1;const next=modes[(modes.indexOf(state.mode)+direction+modes.length)%modes.length];setMode(next);$('#'+next+'Tab').focus()}});
 setMode('flight');
 updateFlightReadout();
 
@@ -411,9 +555,9 @@ function releasePointer(event){pointers.delete(event.pointerId);previousPinch=0}
 canvas.addEventListener('pointerup',releasePointer);canvas.addEventListener('pointercancel',releasePointer);
 canvas.addEventListener('wheel',event=>{event.preventDefault();orbit.radius=THREE.MathUtils.clamp(orbit.radius+event.deltaY*.012,7,27);updateCamera()},{passive:false});
 
-function resize(){const width=stage.clientWidth,height=stage.clientHeight;renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix()}
+function resize(){const width=stage.clientWidth,height=stage.clientHeight;renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();if(state.mode==='compare'){orbit.radius=8.3*Math.max(1,1.32/camera.aspect);updateCamera()}}
 new ResizeObserver(resize).observe(stage);
 resize();
 const clock=new THREE.Clock();
-function frame(){const dt=Math.min(clock.getDelta(),.05);updateFlight(dt);updateFlock(dt);clouds.forEach((cloud,i)=>{cloud.position.x+=dt*(.11+i*.025);if(cloud.position.x>18)cloud.position.x=-18});renderer.render(scene,camera);requestAnimationFrame(frame)}
+function frame(){const dt=Math.min(clock.getDelta(),.05);updateFlight(dt);updateFlock(dt);updateComparison(dt);clouds.forEach((cloud,i)=>{cloud.position.x+=dt*(.11+i*.025);if(cloud.position.x>18)cloud.position.x=-18});renderer.render(scene,camera);requestAnimationFrame(frame)}
 frame();

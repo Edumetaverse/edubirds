@@ -86,6 +86,14 @@ const birds = [
     superpower:'It can hover in one place while drinking nectar from flowers.',
     question:'How is hovering helpful when a flower has no place to perch?',
     features:{beak:{title:'Reaching into flowers',text:'Its long, slender bill and extendable tongue help it reach nectar deep inside flowers.'},feet:{title:'Tiny perching feet',text:'Its small feet are useful for gripping a twig when resting, but it usually moves between flowers by flying.'},feathers:{title:'Hovering wings',text:'Fast wing movements let it hover, move sideways and even fly backwards. A male’s ruby throat is a colourful display.'}}
+  },
+  {
+    id:'crow',name:'Torresian crow',scientific:'Corvus orru',origin:'AUSTRALIA & NEW GUINEA',habitat:'woodland',place:'Woodlands & coastal towns',position:'100% 50%',atlas:'crow',tag:'Adaptable forager',
+    summary:'A glossy black Australian crow with pale eyes that can live in woodlands and coastal towns.',
+    diet:'Insects and other small animals, fruit, grain, eggs and carrion (dead animals).',
+    superpower:'It finds many kinds of food in different places, from trees to the ground.',
+    question:'How might eating many kinds of food help a crow live near people?',
+    features:{beak:{title:'A versatile bill',text:'Its strong, straight bill helps it pick up and handle many kinds of food, including insects, fruit and grain.'},feet:{title:'Perch or forage',text:'Gripping toes help it perch on branches and walk on the ground while searching for food.'},feathers:{title:'Glossy black plumage',text:'Dark feathers cover its body and wings. In bright light they can show a subtle blue sheen; its pale eyes make it easy to recognise.'}}
   }
 ];
 
@@ -95,7 +103,7 @@ const select = $('#birdSelect');
 let activeBird = birds[0];
 let activeFeature = 'beak';
 
-function setArt(element,bird){element.style.backgroundImage=bird.atlas==='new'?"url('assets/additional-birds.png')":'';element.style.backgroundPosition=bird.position;element.setAttribute('aria-label',`Illustration of a ${bird.name.toLowerCase()}`)}
+function setArt(element,bird){element.style.backgroundImage=bird.atlas==='crow'?"url('assets/torresian-crow.webp')":bird.atlas==='new'?"url('assets/additional-birds.png')":'';element.style.backgroundSize=bird.atlas==='crow'?'cover':'';element.style.backgroundPosition=bird.position;element.setAttribute('aria-label',`Illustration of a ${bird.name.toLowerCase()}`)}
 function renderBirds(filter='all'){
   birdGrid.replaceChildren();
   const visible=birds.filter(b=>filter==='all'||b.habitat===filter);

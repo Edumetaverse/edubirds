@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#123d32">
   <meta name="description" content="Explore birds, adaptations and habitats through an interactive field guide for NSW Stage 2 and 3 students.">
   <title>EduBirds — Explore the wonderful world of birds</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="app.js" defer></script>
+  <link rel="stylesheet" href="styles.css?v=edumetaverse-1">
+  <script src="app.js?v=crow-1" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -29,6 +29,7 @@
       <a href="#explore">Explore birds</a><a href="#adaptations">Adaptation lab</a><a href="simulations.html">3D labs</a><a href="#challenges">Challenges</a><a href="#journal">Field journal</a><a href="https://framevr.io/eduaviary2" target="_blank" rel="noopener noreferrer">Virtual Aviary ↗</a>
     </nav>
   </header>
+  <a class="edumetaverse-banner" href="https://edumetaverse.com.au/" target="_blank" rel="noopener noreferrer" aria-label="Visit EDUmetaverse"><span>An EDUmetaverse learning experience</span><img src="assets/edumetaverse-logo.png" alt="EDUmetaverse — Worlds of possibility" width="1612" height="280"></a>
 
   <main id="main">
     <section class="hero" id="top" aria-labelledby="heroTitle">
@@ -45,7 +46,7 @@
 
     <div class="quick-strip" aria-label="What you can do">
       <div class="container quick-grid">
-        <div><span class="quick-number">01</span><span>Meet eleven remarkable birds</span></div>
+        <div><span class="quick-number">01</span><span>Meet twelve remarkable birds</span></div>
         <div><span class="quick-number">02</span><span>Investigate adaptations</span></div>
         <div><span class="quick-number">03</span><span>Test your thinking</span></div>
       </div>
@@ -57,10 +58,10 @@
       <div class="container">
         <div class="section-head">
           <div><p class="eyebrow">THE FIELD GUIDE <span class="eyebrow-star">✳</span> 01</p><h2 id="exploreTitle">Meet the birds<span class="accent-dot">.</span></h2><p class="section-intro">From Australian backyards to distant wetlands, every species has its own way of life. Choose a bird to open its field notes.</p></div>
-          <div class="head-note">11 SPECIES<br><span>LOTS TO DISCOVER ↘</span></div>
+          <div class="head-note">12 SPECIES<br><span>LOTS TO DISCOVER ↘</span></div>
         </div>
         <div class="filter-row" role="group" aria-label="Filter birds by habitat">
-          <button class="filter active" type="button" data-filter="all" aria-pressed="true">All birds <span>11</span></button>
+          <button class="filter active" type="button" data-filter="all" aria-pressed="true">All birds <span>12</span></button>
           <button class="filter" type="button" data-filter="woodland" aria-pressed="false">Woodlands</button>
           <button class="filter" type="button" data-filter="rainforest" aria-pressed="false">Rainforest</button>
           <button class="filter" type="button" data-filter="coast" aria-pressed="false">Coast</button>
@@ -76,7 +77,7 @@
       <div class="container">
         <div class="section-head light-head"><div><p class="eyebrow">LOOK CLOSER <span class="eyebrow-star">✳</span> 02</p><h2 id="adaptTitle">The adaptation lab<span class="accent-dot">.</span></h2><p class="section-intro">An adaptation is a feature or behaviour that helps a living thing survive in its environment. Pick a bird, then investigate its features.</p></div><span class="lab-stamp" aria-hidden="true">OBSERVE<br>QUESTION<br>DISCOVER ✳</span></div>
         <div class="lab-shell">
-          <div class="lab-display"><div class="lab-display-top"><span>SPECIMEN <strong id="specimenNumber">01 / 11</strong></span><span>FIELD NOTES ↗</span></div><div class="lab-art bird-art" id="labArt" role="img"></div><div class="lab-bird-name"><span id="labCommon">Rainbow lorikeet</span><i id="labScientific">Trichoglossus moluccanus</i></div></div>
+          <div class="lab-display"><div class="lab-display-top"><span>SPECIMEN <strong id="specimenNumber">01 / 12</strong></span><span>FIELD NOTES ↗</span></div><div class="lab-art bird-art" id="labArt" role="img"></div><div class="lab-bird-name"><span id="labCommon">Rainbow lorikeet</span><i id="labScientific">Trichoglossus moluccanus</i></div></div>
           <div class="lab-controls"><label class="input-label" for="birdSelect">CHOOSE YOUR BIRD</label><select id="birdSelect" aria-label="Choose a bird to investigate"></select><div class="feature-heading">Explore a feature <span aria-hidden="true">↓</span></div><div class="feature-buttons" role="group" aria-label="Bird features"><button type="button" class="feature-button active" data-feature="beak" aria-pressed="true"><span class="feature-icon">01</span><span>Beak & food</span><span>↗</span></button><button type="button" class="feature-button" data-feature="feet" aria-pressed="false"><span class="feature-icon">02</span><span>Feet & habitat</span><span>↗</span></button><button type="button" class="feature-button" data-feature="feathers" aria-pressed="false"><span class="feature-icon">03</span><span>Feathers & movement</span><span>↗</span></button></div><div class="feature-copy" id="featureCopy" aria-live="polite"></div></div>
         </div>
         <div class="concept-grid"><article><span class="concept-index">A / STRUCTURE</span><h3>Shape has a job.</h3><p>A beak’s shape can help a bird reach, catch, crush or filter its food.</p></article><article><span class="concept-index">B / HABITAT</span><h3>Place matters.</h3><p>Feet, feathers and behaviour help a bird live where it finds food and shelter.</p></article><article><span class="concept-index">C / SURVIVAL</span><h3>Look for clues.</h3><p>Scientists observe patterns and ask how a feature might help a bird survive.</p></article></div>
@@ -85,7 +86,7 @@
 
     <section class="section movement-section" aria-labelledby="movementTitle"><div class="container"><div class="section-head compact-head"><div><p class="eyebrow">WAYS TO MOVE <span class="eyebrow-star">✳</span> 03</p><h2 id="movementTitle">Wings do different things<span class="accent-dot">.</span></h2></div><p class="section-intro">A bird’s wings give clues about how it moves. Select a movement to see an example.</p></div><div class="movement-tabs" role="tablist" aria-label="Ways birds use wings"><button type="button" role="tab" id="moveTab0" aria-controls="movementPanel" aria-selected="true" data-move="0">Fly quietly</button><button type="button" role="tab" id="moveTab1" aria-controls="movementPanel" aria-selected="false" data-move="1">Swim underwater</button><button type="button" role="tab" id="moveTab2" aria-controls="movementPanel" aria-selected="false" data-move="2">Hover at flowers</button><button type="button" role="tab" id="moveTab3" aria-controls="movementPanel" aria-selected="false" data-move="3">Soar on rising air</button></div><div class="movement-panel" id="movementPanel" role="tabpanel" aria-labelledby="moveTab0"></div></div></section>
 
-    <section class="sim-promo" aria-labelledby="simPromoTitle"><div class="container sim-promo-layout"><div class="sim-promo-copy"><p class="eyebrow">GO DEEPER <span class="eyebrow-star">✳</span> 04</p><h2 id="simPromoTitle">See birds move<br><em>in three dimensions.</em></h2><p>Explore the forces of bird flight in 3D. Compare flapping with gliding, change airspeed and wing spread, then guide a flock using three simple neighbour rules.</p><a class="button button-primary" href="simulations.html">Launch the 3D labs <span aria-hidden="true">↗</span></a><span class="sim-promo-note">REAL 3D MESHES · INTERACTIVE CAMERA · NO SVG SIMULATIONS</span></div><div class="sim-promo-art"><div class="bird-art" role="img" aria-label="Illustration of a golden eagle" style="background-image:url('assets/additional-birds.png');background-position:0% 0%"></div><div class="bird-art" role="img" aria-label="Illustration of a ruby-throated hummingbird" style="background-image:url('assets/additional-birds.png');background-position:50% 100%"></div></div></div></section>
+    <section class="sim-promo" aria-labelledby="simPromoTitle"><div class="container sim-promo-layout"><div class="sim-promo-copy"><p class="eyebrow">GO DEEPER <span class="eyebrow-star">✳</span> 04</p><h2 id="simPromoTitle">See birds move<br><em>in three dimensions.</em></h2><p>Explore the forces of bird flight in 3D. Alternate flapping and gliding, change wingbeat rate, airspeed and wing spread, then watch the bird rise or sink. Guide a flock using three simple neighbour rules, then compare the wings of an eagle, owl and hummingbird.</p><a class="button button-primary" href="simulations.html">Launch the 3D labs <span aria-hidden="true">↗</span></a><span class="sim-promo-note">3D VECTOR MESHES · INTERACTIVE CAMERA · ANIMATED FORCES</span></div><div class="sim-promo-art"><div class="bird-art" role="img" aria-label="Illustration of a golden eagle" style="background-image:url('assets/additional-birds.png');background-position:0% 0%"></div><div class="bird-art" role="img" aria-label="Illustration of a ruby-throated hummingbird" style="background-image:url('assets/additional-birds.png');background-position:50% 100%"></div></div></div></section>
 
     <section class="section challenge-section" id="challenges" aria-labelledby="challengeTitle"><div class="container"><div class="section-head"><div><p class="eyebrow">PUT IDEAS TO WORK <span class="eyebrow-star">✳</span> 05</p><h2 id="challengeTitle">Try a challenge<span class="accent-dot">.</span></h2><p class="section-intro">Use what you noticed to make predictions. It is okay to change your mind after new evidence.</p></div></div><div class="challenge-grid"><article class="challenge-card"><div class="challenge-card-top"><span>ACTIVITY 01</span><span class="challenge-symbol" aria-hidden="true">✦</span></div><h3>Beak detective</h3><p>Which feeding tool fits the job? Choose the best answer and find out why.</p><div class="quiz-box"><div class="quiz-progress" id="quizProgress">QUESTION 1 OF 7</div><h4 id="quizQuestion"></h4><div id="quizChoices" class="quiz-choices"></div><p id="quizFeedback" class="quiz-feedback" aria-live="polite"></p><button id="quizNext" type="button" class="text-button" hidden>Next question <span aria-hidden="true">→</span></button></div></article><article class="challenge-card habitat-card"><div class="challenge-card-top"><span>ACTIVITY 02</span><span class="challenge-symbol" aria-hidden="true">✳</span></div><h3>Habitat helper</h3><p>Pick a habitat, then choose the feature that would be most useful there.</p><div class="habitat-picker" role="group" aria-label="Choose a habitat"><button type="button" class="habitat-choice active" data-habitat="water" aria-pressed="true">Cold sea</button><button type="button" class="habitat-choice" data-habitat="flowers" aria-pressed="false">Flowering trees</button><button type="button" class="habitat-choice" data-habitat="shallows" aria-pressed="false">Shallow water</button><button type="button" class="habitat-choice" data-habitat="rainforest" aria-pressed="false">Rainforest canopy</button><button type="button" class="habitat-choice" data-habitat="tubular" aria-pressed="false">Tubular flowers</button></div><div class="habitat-scene" id="habitatScene"><span id="habitatPrompt"></span></div><div class="habitat-options" id="habitatOptions"></div><p id="habitatFeedback" class="habitat-feedback" aria-live="polite"></p></article></div></div></section>
 

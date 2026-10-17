@@ -18,25 +18,26 @@ In **Settings → Pages**, choose **Deploy from a branch**, then select **main**
 
 ## Student activities
 
-- Explore bird basics, 11 field guide profiles and adaptations of beaks, feet and feathers.
+- Explore bird basics, 12 field guide profiles and adaptations of beaks, feet and feathers.
 - Filter birds by habitat and open illustrated field notes.
 - Compare flight, swimming, hovering and soaring.
-- Explore how birds fly in a 3D four-force lab: compare flapping and gliding, then test airspeed and wing spread. Use a separate 3D flocking lab to test spacing, direction matching and cohesion.
+- Explore how birds fly in a 3D four-force lab: vary wingbeat rate, compare flapping and gliding, or alternate them every three seconds; change airspeed and wing spread to make the bird rise or sink. Use a separate 3D flocking lab to test spacing, direction matching and cohesion. In the third lab, compare simplified 3D wing models and generated portraits of a golden eagle, great horned owl and ruby-throated hummingbird.
 - Answer seven beak questions and five habitat challenges.
 - Save up to ten field observations in browser storage. Notes stay on the device.
 - Visit the [virtual Aviary](https://framevr.io/eduaviary2).
 
-The 3D labs use articulated mesh geometry rendered by Three.js. The flight lesson shows a general bird and the four forces: lift, weight, thrust and drag. Its numeric airflow-lift example uses a published golden eagle reference (mass 4.6 kg, weight 45 N, wing area 0.65 m², modelled cruise speed 16 m/s) from Chatterjee et al. (2007) solely to set a scale. It calculates lift with NASA's equation L = ½ρv²SCL, standard sea-level air density 1.225 kg/m³, and a fixed lift coefficient calibrated so lift equals 45 N at the reference condition. Students change airspeed and illustrative exposed wing area; the 3D wings and lift arrow respond immediately. Flapping and gliding animate differently. The display compares airflow lift and weight at an instant; vertical position is schematic, not measured altitude. Wingbeat lift and thrust, as well as drag, are shown qualitatively, without numerical predictions for sustained flight. Flocking follows adjustable teaching rules and reports model units, not measured metres. The birds are custom 3D feather meshes rather than SVGs. The field guide uses generated raster illustrations, not bird photographs. Models and illustrations are representative and should be compared with real observations.
+The 3D labs use articulated vector mesh geometry rendered by Three.js. The bird's shoulder joints sweep through a pronounced upstroke and downstroke, and the outer wings fold slightly on the recovery stroke. The flight lesson shows a general bird and the four forces: lift, weight, thrust and drag. Its numeric airflow-lift example uses a published golden eagle reference (mass 4.6 kg, weight 45 N, wing area 0.65 m², modelled cruise speed 16 m/s) from Chatterjee et al. (2007) solely to set a scale. It calculates airflow lift with NASA's equation L = ½ρv²SCL and standard sea-level air density 1.225 kg/m³, with a fixed lift coefficient calibrated so lift equals 45 N at the reference condition. Each beat per second contributes an assumed 5 N of average powered lift, an illustrative teaching value rather than measured species data. Vertical resistance is modelled as -1.5v|v| N, and the model integrates vertical acceleration as (total lift - weight + vertical resistance) / 4.6 kg. Height is bounded at 0 and 60 m. Forward thrust and drag remain qualitative, while the airspeed slider holds forward speed fixed. The bird's 3D vertical displacement compresses height for visibility. Flocking follows adjustable teaching rules and reports model units, not measured metres. The birds are custom 3D feather meshes rather than SVGs. The field guide uses generated raster illustrations, not bird photographs. Models and illustrations are representative and should be compared with real observations.
 
 ## Artwork and third-party code
 
-The PNGs in `assets/` were generated for EduBirds. The hero prompt requested a hand-painted Australian bushland scene with a kookaburra, rainbow lorikeet and superb fairywren, leaving space for a headline. The first portrait prompt requested a six-bird contact sheet of rainbow lorikeet, laughing kookaburra, barn owl, little penguin, superb fairywren and flamingo. The second requested golden eagle, great horned owl, white-faced heron, scarlet macaw and male ruby-throated hummingbird in five cells of a six-cell contact sheet.
+The bird portraits in `assets/` were generated for EduBirds. The hero prompt requested a hand-painted Australian bushland scene with a kookaburra, rainbow lorikeet and superb fairywren, leaving space for a headline. The first portrait prompt requested a six-bird contact sheet of rainbow lorikeet, laughing kookaburra, barn owl, little penguin, superb fairywren and flamingo. The second requested golden eagle, great horned owl, white-faced heron, scarlet macaw and male ruby-throated hummingbird in five cells of a six-cell contact sheet. The Torresian crow portrait was generated separately as a square natural-history illustration and saved as WebP for the site. The EDUmetaverse logo comes from the official EDUmetaverse website and is used in the banner on both pages.
 
 The `assets/vendor/` files are Three.js 0.186.1 from the npm package `three`. Its MIT license is included as `THREE-LICENSE.txt`.
 
 ## Reading and fact sources
 
 - [Australian Museum: birds](https://australian.museum/learn/animals/birds/)
+- [Australian Museum: Torresian crow](https://australian.museum/learn/animals/birds/torresian-crow/)
 - [BirdLife Australia: rainbow lorikeet](https://birdlife.org.au/bird-profiles/rainbow-lorikeet/)
 - [Cornell Lab: golden eagle](https://www.allaboutbirds.org/guide/Golden_Eagle/overview)
 - [Cornell Lab: great horned owl](https://www.allaboutbirds.org/guide/Great_Horned_Owl/overview)
