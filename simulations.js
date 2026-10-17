@@ -244,7 +244,6 @@ const comparisonBirds={
   lorikeet:{name:'Rainbow lorikeet',fact:'Fast, direct travel in noisy flocks between flowering trees.',wing:'Pointed parrot wings; a long tail helps steering.',modes:['fly'],rate:2.4,span:1.05,depth:.86,tail:1.2,bill:.85,colours:[0x277d55,0x318a43,0x225c8a,0xe79735],portrait:['bird-portraits.png','0% 0%'],source:'https://birdlife.org.au/bird-profiles/rainbow-lorikeet/'},
   kookaburra:{name:'Laughing kookaburra',fact:'Leaves a lookout perch to swoop down on prey.',wing:'Broad, rounded wings; a sturdy body and bill.',modes:['fly'],rate:1.7,span:1.12,depth:1.08,tail:.9,bill:1.35,colours:[0x735342,0x76513e,0x4b3027,0xe7d6b0],portrait:['bird-portraits.png','50% 0%'],source:'https://birdlife.org.au/bird-profiles/laughing-kookaburra/'},
   owl:{name:'Barn owl',fact:'Buoyant, low hunting flight with quiet wingbeats.',wing:'Long, rounded wings and soft, fringed feathers.',modes:['fly'],rate:1.5,span:1.28,depth:1.17,tail:.75,bill:.75,colours:[0xb78c62,0xb89a79,0x85694f,0xf4e6d1],portrait:['bird-portraits.png','100% 0%'],source:'https://www.allaboutbirds.org/guide/Barn_Owl/id'},
-  penguin:{name:'Little penguin',fact:'Flightless in air. Stiff flippers beat to propel it underwater.',wing:'Short, rigid flippers and a streamlined body.',modes:['swim'],rate:2.8,span:.54,depth:.52,tail:.42,bill:.78,colours:[0x285b79,0x326882,0x1c405b,0xf3eee1],portrait:['bird-portraits.png','0% 100%'],source:'https://www.penguins.org.au/conservation/education/nature-notes/little-penguins/'},
   fairywren:{name:'Superb fairywren',fact:'Short, quick flights between low shrubs and cover.',wing:'Compact wings and an upright, long tail.',modes:['fly'],rate:3,span:.76,depth:.8,tail:1.65,bill:.75,colours:[0x204f81,0x2b63a6,0x102b52,0xe7e7dc],portrait:['bird-portraits.png','50% 100%'],source:'https://birdlife.org.au/bird-profiles/superb-fairy-wren/'},
   flamingo:{name:'Flamingo',fact:'Flies with its neck stretched forward and legs trailing behind.',wing:'Large wings carry a long-necked wetland bird.',modes:['fly'],rate:1.45,span:1.25,depth:1.08,tail:.5,bill:1.1,colours:[0xe59a9a,0xe46d82,0x202c39,0xf5c4b6],portrait:['bird-portraits.png','100% 100%'],source:'https://animals.sandiegozoo.org/animals/flamingo'},
   eagle:{name:'Golden eagle',fact:'Often soars and glides on rising air with wings held in a shallow V.',wing:'Very broad wings with separated fingertip feathers.',modes:['fly','soar'],rate:1.15,span:1.38,depth:1.18,tail:1.08,bill:1.2,colours:[0x5a3726,0x69442e,0x3d2c27,0x90613d],portrait:['additional-birds.png','0% 0%'],source:'https://www.allaboutbirds.org/guide/Golden_Eagle/id'},
@@ -255,7 +254,6 @@ const comparisonBirds={
   crow:{name:'Torresian crow',fact:'Flies between feeding places and gathers in flocks outside breeding season.',wing:'Strong black wings, a broad tail and pale eyes.',modes:['fly'],rate:1.8,span:1.12,depth:1.02,tail:1.05,bill:1.1,colours:[0x171c26,0x20293a,0x11151d,0x273041],portrait:['torresian-crow.webp','50% 50%'],source:'https://birdlife.org.au/bird-profiles/torresian-crow/'}
 };
 const comparisonModels={Left:null,Right:null};
-const comparisonWater={Left:null,Right:null};
 function makeComparisonModel(profile){
   const model=makeBird(profile===comparisonBirds.eagle?'eagle':'small');
   model.scale.setScalar(profile===comparisonBirds.eagle?.72:1.05);
@@ -271,10 +269,6 @@ function makeComparisonModel(profile){
   tail.scale.z=profile.tail;
   for(const {wing,side} of wings){wing.scale.x=side*profile.span;wing.scale.z=profile.depth;}
   const material=(hex)=>new THREE.MeshStandardMaterial({color:hex,roughness:.86,flatShading:true});
-  if(profile===comparisonBirds.penguin){
-    body.scale.set(1.3,1.15,.84);
-    for(const {wing} of wings)wing.rotation.x=.25;
-  }
   if(profile===comparisonBirds.owl||profile===comparisonBirds['horned-owl']){
     ellipsoid(body,material(0xe9d6b7),[0,.16,.76],[.28,.29,.095]);
     for(const side of [-1,1]){
@@ -584,17 +578,10 @@ function selectComparisonBird(side,key){
   state.comparison[side].bird=key;
   if(!bird.modes.includes(state.comparison[side].mode))state.comparison[side].mode=bird.modes[0];
   disposeComparisonModel(comparisonModels[side]);
-  if(comparisonWater[side]){comparisonGroup.remove(comparisonWater[side]);comparisonWater[side].geometry.dispose();comparisonWater[side].material.dispose();comparisonWater[side]=null;}
   const model=makeComparisonModel(bird);
-  model.position.set(side==='Left'?-2.3:2.3,bird===comparisonBirds.penguin?2.48:2.75,0);
+  model.position.set(side==='Left'?-2.3:2.3,2.75,0);
   comparisonGroup.add(model);
   comparisonModels[side]=model;
-  if(bird===comparisonBirds.penguin){
-    const water=new THREE.Mesh(new THREE.CircleGeometry(1.65,40),new THREE.MeshBasicMaterial({color:0x3489a5,transparent:true,opacity:.46,side:THREE.DoubleSide,depthWrite:false}));
-    water.rotation.x=-Math.PI/2;
-    water.position.set(model.position.x,2.65,-.15);
-    comparisonGroup.add(water);comparisonWater[side]=water;
-  }
   $('#compare'+side+'Label').textContent=`${bird.name} · ${state.comparison[side].mode}`;
   $('#compare'+side+'Name').textContent=bird.name;
   $('#compare'+side+'Fact').textContent=bird.fact;
@@ -608,12 +595,12 @@ function selectComparisonBird(side,key){
   const choices=$('#compare'+side+'Modes');choices.replaceChildren();
   for(const mode of bird.modes){
     const button=document.createElement('button');
-    button.type='button';button.textContent=mode==='swim'?'Swim underwater':mode[0].toUpperCase()+mode.slice(1);
+    button.type='button';button.textContent=mode[0].toUpperCase()+mode.slice(1);
     button.setAttribute('aria-pressed',String(state.comparison[side].mode===mode));
     button.addEventListener('click',()=>selectComparisonMode(side,mode));
     choices.append(button);
   }
-  $('#compare'+side+'ModeNote').textContent=bird.modes.length===1&&bird.modes[0]==='swim'?'This bird cannot fly in air. Its wings work as underwater flippers.':`Available movement: ${bird.modes.join(' or ')}.`;
+  $('#compare'+side+'ModeNote').textContent=`Available movement: ${bird.modes.join(' or ')}.`;
   updateComparisonQuestion();
 }
 function selectComparisonMode(side,mode){
@@ -639,13 +626,12 @@ function updateComparison(dt){
       for(const {wing,side:wingSide} of model.userData.wings)wing.rotation.z=wingSide*.18;
       model.rotation.z=still?0:Math.sin(state.comparison.time*.65)*.035;
     }else{
-      model.userData.animate(phase,still?0:selected.mode==='hover'?.62:selected.mode==='swim'?.68:.72);
+      model.userData.animate(phase,still?0:selected.mode==='hover'?.62:.72);
       if(selected.mode==='hover'&&!still)for(const {wing,side:wingSide} of model.userData.wings)wing.rotation.y=wingSide*(.18+.38*Math.sin(phase));
       model.rotation.z=0;
     }
-    model.rotation.x=selected.mode==='swim'?.34:0;
-    const base=selected.mode==='swim'?2.48:2.75;
-    model.position.y=still?base:base+Math.sin(phase)*(selected.mode==='hover'?.035:.055);
+    model.rotation.x=0;
+    model.position.y=still?2.75:2.75+Math.sin(phase)*(selected.mode==='hover'?.035:.055);
     model.position.z=still||selected.mode==='hover'?0:Math.sin(state.comparison.time*(selected.mode==='soar'?.55:1.15))*(selected.mode==='soar'?.28:.16);
   }
 }
@@ -715,7 +701,7 @@ function setMode(mode){
   $('#flightReadout').hidden=!flight;$('#flockReadout').hidden=!flock;
   $('#flightExtra').hidden=!flight;
   $('#flight-evidence').hidden=!flight;
-  $('#labTitle').textContent=flight?'How do birds fly?':flock?'How does a flock move together?':'How do twelve birds move?';
+  $('#labTitle').textContent=flight?'How do birds fly?':flock?'How does a flock move together?':'How do eleven birds fly?';
   $('#stageLabel').textContent=flight?'BIRD FLIGHT · 3D FORCE MODEL':flock?'MODEL BIRDS · FLOCKING RULES':'WING ADAPTATIONS · SIMPLIFIED 3D MODELS';
   $('#forceKey').hidden=!flight;$('#sceneCallout').hidden=!flight;$('#altitudeMeter').hidden=!flight;
   $('#compareStageLabels').hidden=!compare;

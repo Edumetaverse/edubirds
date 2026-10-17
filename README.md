@@ -21,7 +21,7 @@ In **Settings → Pages**, choose **Deploy from a branch**, then select **main**
 - Explore bird basics, 12 field guide profiles and adaptations of beaks, feet and feathers.
 - Filter birds by habitat and open illustrated field notes.
 - Compare flight, swimming, hovering and soaring.
-- Explore how birds fly in a 3D four-force lab: vary wingbeat rate, compare flapping and gliding, or alternate them every three seconds; change airspeed and wing spread to make the bird rise or sink. Use a separate 3D flocking lab to test spacing, direction matching and cohesion. In the third lab, select any two of the twelve bird species, compare their custom 3D models and generated portraits, and choose only their supported movement modes: fly, soar, hover, or underwater swimming for the flightless little penguin. Each comparison includes a species source.
+- Explore how birds fly in a 3D four-force lab: vary wingbeat rate, compare flapping and gliding, or alternate them every three seconds; change airspeed and wing spread to make the bird rise or sink. Use a separate 3D flocking lab to test spacing, direction matching and cohesion. In the third lab, select any two of the eleven flying bird species, compare their custom 3D models and generated portraits, and choose only their supported movement modes: fly, soar or hover. Each comparison includes a species source. The little penguin remains in the twelve-bird field guide but is not a flight-comparison choice.
 - Answer seven beak questions and five habitat challenges.
 - Save up to ten field observations in browser storage. Notes stay on the device.
 - Visit the [virtual Aviary](https://framevr.io/eduaviary2).
