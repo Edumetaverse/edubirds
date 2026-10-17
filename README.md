@@ -21,12 +21,12 @@ In **Settings → Pages**, choose **Deploy from a branch**, then select **main**
 - Explore bird basics, 11 field guide profiles and adaptations of beaks, feet and feathers.
 - Filter birds by habitat and open illustrated field notes.
 - Compare flight, swimming, hovering and soaring.
-- Use a 3D golden eagle soaring lab to test rising air and starting height, and a 3D flocking lab to test spacing, direction matching and cohesion.
+- Explore how birds fly in a 3D four-force lab: compare flapping and gliding, then test airspeed and wing spread. Use a separate 3D flocking lab to test spacing, direction matching and cohesion.
 - Answer seven beak questions and five habitat challenges.
 - Save up to ten field observations in browser storage. Notes stay on the device.
 - Visit the [virtual Aviary](https://framevr.io/eduaviary2).
 
-The 3D labs use articulated mesh geometry rendered by Three.js. The soaring calculation uses a modelled golden eagle cruise speed of 16 m/s from Chatterjee et al. (2007) and a conservative best glide sink rate of 0.75 m/s used by Garstang et al. (2022). The student chooses the rising air speed and starting height. The calculation assumes a straight glide in steady air: vertical speed = rising air speed − 0.75 m/s; horizontal distance = 16 m/s × elapsed time. It does not simulate turns, changing wing posture, wind drift or powered flapping. The 3D scene is schematically scaled. Flocking follows adjustable teaching rules and reports model units, not measured metres. The birds are custom 3D feather meshes rather than SVGs. The field guide uses generated raster illustrations, not bird photographs. Models and illustrations are representative and should be compared with real observations.
+The 3D labs use articulated mesh geometry rendered by Three.js. The flight lesson shows a general bird and the four forces: lift, weight, thrust and drag. Its numeric airflow-lift example uses a published golden eagle reference (mass 4.6 kg, weight 45 N, wing area 0.65 m², modelled cruise speed 16 m/s) from Chatterjee et al. (2007) solely to set a scale. It calculates lift with NASA's equation L = ½ρv²SCL, standard sea-level air density 1.225 kg/m³, and a fixed lift coefficient calibrated so lift equals 45 N at the reference condition. Students change airspeed and illustrative exposed wing area; the 3D wings and lift arrow respond immediately. Flapping and gliding animate differently. The display compares airflow lift and weight at an instant; vertical position is schematic, not measured altitude. Wingbeat lift and thrust, as well as drag, are shown qualitatively, without numerical predictions for sustained flight. Flocking follows adjustable teaching rules and reports model units, not measured metres. The birds are custom 3D feather meshes rather than SVGs. The field guide uses generated raster illustrations, not bird photographs. Models and illustrations are representative and should be compared with real observations.
 
 ## Artwork and third-party code
 
@@ -44,7 +44,8 @@ The `assets/vendor/` files are Three.js 0.186.1 from the npm package `three`. It
 - [Animal Diversity Web: scarlet macaw](https://animaldiversity.org/accounts/Ara_macao/)
 - [Cornell Lab: ruby-throated hummingbird](https://www.allaboutbirds.org/guide/Ruby-throated_Hummingbird/overview)
 - [Chatterjee et al. (2007): aerodynamic data, Table 1](https://www.pnas.org/doi/10.1073/pnas.0702040104)
-- [Garstang et al. (2022): instrumented golden eagle flight](https://pmc.ncbi.nlm.nih.gov/articles/PMC9179650/)
+- [NASA: the lift equation](https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/lift-equation/)
+- [NASA: standard sea-level air density](https://ntrs.nasa.gov/api/citations/20030033031/downloads/20030033031.pdf)
 - [NSW Curriculum: Science and Technology K–6 (2024)](https://curriculum.nsw.edu.au/learning-areas/science/science-and-technology-k-6-2024/overview)
 
 EduBirds is written for Stage 2–3 learners. It does not claim formal syllabus outcome mapping.

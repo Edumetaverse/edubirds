@@ -19,7 +19,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xcfe6e9);
 scene.fog = new THREE.Fog(0xcfe6e9, 20, 48);
 const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 100);
-const orbit = { yaw: 0.32, pitch: 0.62, radius: 12.5 };
+const orbit = { yaw: 0.72, pitch: 0.46, radius: 9.2 };
 function updateCamera() {
   const target = new THREE.Vector3(0, 2.7, 0);
   camera.position.set(
@@ -55,11 +55,13 @@ ground.receiveShadow = true;
 scene.add(ground);
 
 const hillMat = new THREE.MeshStandardMaterial({ color: 0x79a893, roughness: 1, flatShading: true });
+const hills=[];
 for (const [x, z, r, h] of [[-11,-12,6,4],[2,-19,8,5],[14,-13,7,4],[-17,2,7,3]]) {
   const hill = new THREE.Mesh(new THREE.ConeGeometry(r,h,7), hillMat);
   hill.position.set(x,h/2-0.7,z);
   hill.receiveShadow = true;
   scene.add(hill);
+  hills.push(hill);
 }
 
 const cloudMat = new THREE.MeshStandardMaterial({ color: 0xfafdf7, transparent:true, opacity:.68, roughness:1, depthWrite:false });
@@ -202,24 +204,47 @@ function makeBird(kind='eagle') {
   return group;
 }
 
-const flightBird=makeBird('eagle');
-flightBird.scale.setScalar(1.3);
+const flightBird=makeBird('small');
+flightBird.scale.setScalar(1.25);
 flightBird.rotation.y=-.12;
 scene.add(flightBird);
+const liftArrow=new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(-2.2,1.9,.7),2.2,0x2d9a72,.48,.3);
+const weightArrow=new THREE.ArrowHelper(new THREE.Vector3(0,-1,0),new THREE.Vector3(2.2,5.0,.7),2.2,0xd66a49,.48,.3);
+const thrustArrow=new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(-3.4,2.3,-1.3),1.8,0xb776bf,.5,.32);
+const dragArrow=new THREE.ArrowHelper(new THREE.Vector3(0,0,-1),new THREE.Vector3(3.4,2.3,1.4),1.6,0x4c8eb3,.5,.32);
+scene.add(liftArrow,weightArrow,thrustArrow,dragArrow);
+const airflow=[];
+const airflowMat=new THREE.MeshBasicMaterial({color:0x2f92b0,transparent:true,opacity:.7});
+for(let i=0;i<12;i++){
+  const streak=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.65,5),airflowMat);
+  streak.rotation.x=Math.PI/2;
+  streak.position.set((i%4-1.5)*2.1,1.5+Math.floor(i/4)*1.05,randomRange(-5,5));
+  scene.add(streak);airflow.push(streak);
+}
 const flockGroup=new THREE.Group();
 scene.add(flockGroup);
 flockGroup.visible=false;
 
 const state={
   mode:'flight',
-  flight:{updraft:0.5,startHeight:100,altitude:100,distance:0,running:true,time:0},
+  flight:{airspeed:16,spread:1,flapping:true,time:0},
   flock:{size:16,separation:1.4,alignment:1,cohesion:.8,running:true,time:0}
 };
-// Golden eagle reference values: Chatterjee et al. (2007) Table 1 gives a
-// modelled cruise speed of 16 m/s; Garstang et al. (2022) use a conservative
-// best-glide sink rate of 0.75 m/s for straight, non-flapping flight.
-const EAGLE_CRUISE_MPS=16;
-const EAGLE_SINK_MPS=0.75;
+// Chatterjee et al. (2007), Table 1: mass 4.6 kg, weight 45 N,
+// wing area 0.65 m², modelled cruise speed 16 m/s. NASA's lift equation is
+// L = 0.5 * rho * v² * S * CL. CL is calibrated so L=W at the reference case;
+// it is held fixed as students change v and the illustrative exposed area.
+const REFERENCE_SPEED_MPS=16;
+const REFERENCE_WEIGHT_N=45;
+const REFERENCE_WING_AREA_M2=.65;
+const AIR_DENSITY_KG_M3=1.225;
+const REFERENCE_CL=REFERENCE_WEIGHT_N/(.5*AIR_DENSITY_KG_M3*REFERENCE_SPEED_MPS**2*REFERENCE_WING_AREA_M2);
+function flightForces(){
+  const f=state.flight;
+  const area=REFERENCE_WING_AREA_M2*f.spread;
+  const lift=.5*AIR_DENSITY_KG_M3*f.airspeed**2*area*REFERENCE_CL;
+  return {area,lift,weight:REFERENCE_WEIGHT_N,net:lift-REFERENCE_WEIGHT_N};
+}
 let agents=[];
 function randomRange(a,b){return a+Math.random()*(b-a)}
 function buildFlock(count){
@@ -242,32 +267,36 @@ buildFlock(state.flock.size);
 
 function updateFlight(dt){
   const f=state.flight;
-  if (!f.running) return;
   f.time+=dt;
-  // The chosen rising-air speed is a scenario input, not a field measurement.
-  // At the reference best-glide condition: ground-relative climb = air rise - sink.
-  const verticalSpeed=f.updraft-EAGLE_SINK_MPS;
-  f.altitude=Math.max(0,f.altitude+verticalSpeed*dt);
-  f.distance+=EAGLE_CRUISE_MPS*dt;
-  if(f.altitude===0){f.running=false;$('#flightToggle').textContent='Restart flight'}
-  // Scene height is schematic. The metre values above drive the readouts.
-  flightBird.position.set(Math.sin(f.time*.38)*.18,2.9+Math.min(2.2,(f.altitude-f.startHeight)/90),Math.sin(f.time*.24)*.14);
-  flightBird.rotation.z=Math.sin(f.time*.7)*.035;
-  flightBird.rotation.x=-Math.sign(verticalSpeed)*.025;
-  flightBird.userData.animate(f.time*1.2,.08);
-  updateFlightReadout();
+  const forces=flightForces();
+  const targetY=2.9+THREE.MathUtils.clamp(forces.net/45,-.7,.7);
+  const displayY=targetY+(f.flapping?Math.sin(f.time*13)*.09:0);
+  flightBird.position.y=THREE.MathUtils.damp(flightBird.position.y,displayY,3.8,dt);
+  flightBird.position.x=Math.sin(f.time*.9)*.07;
+  flightBird.rotation.z=THREE.MathUtils.damp(flightBird.rotation.z,THREE.MathUtils.clamp(forces.net/140,-.21,.21),3.5,dt);
+  flightBird.rotation.x=Math.sin(f.time*1.5)*.015;
+  for(const {wing,side} of flightBird.userData.wings)wing.scale.x=side*1.1*f.spread;
+  flightBird.userData.animate(f.time*(f.flapping?13:1.6),f.flapping?.85:.07);
+  liftArrow.position.set(-2.2,flightBird.position.y-1.55,.7);
+  weightArrow.position.set(2.2,flightBird.position.y+1.4,.7);
+  liftArrow.setLength(THREE.MathUtils.clamp(forces.lift/22,.6,2.7),.48,.3);
+  weightArrow.setLength(2.05,.48,.3);
+  thrustArrow.visible=f.flapping&&state.mode==='flight';
+  dragArrow.setLength(THREE.MathUtils.clamp(1.35*(f.airspeed/16)**2,.5,2.6),.5,.32);
+  for(const streak of airflow){streak.position.z+=dt*f.airspeed*.24;if(streak.position.z>6)streak.position.z=-6}
 }
 function updateFlightReadout(){
-  const f=state.flight;
-  const verticalSpeed=f.updraft-EAGLE_SINK_MPS;
-  $('#altitudeValue').textContent=`${Math.round(f.altitude)} m`;
-  $('#flightModeValue').textContent=verticalSpeed>.01?'Soaring':verticalSpeed<-.01?'Gliding':'Level';
-  $('#trendValue').textContent=`${verticalSpeed>=0?'+':''}${verticalSpeed.toFixed(2)} m/s`;
-  $('#distanceValue').textContent=`${(f.distance/1000).toFixed(2)} km`;
-  $('#elapsedValue').textContent=`${Math.floor(f.time)} s`;
-  const afterMinute=Math.max(0,f.startHeight+verticalSpeed*60);
-  $('#predictionValue').textContent=`${Math.round(afterMinute)} m`;
-  $('#scenarioMode').textContent=verticalSpeed>.01?'Rising air lifts the eagle faster than it sinks.':verticalSpeed<-.01?'The eagle loses height while it glides.':'Rising air exactly balances the assumed sink rate.';
+  const {area,lift,weight,net}=flightForces();
+  $('#liftValue').textContent=`${lift.toFixed(1)} N`;
+  $('#weightValue').textContent=`${weight.toFixed(1)} N`;
+  $('#netValue').textContent=`${net>=0?'+':''}${net.toFixed(1)} N`;
+  $('#areaValue').textContent=`${area.toFixed(2)} m²`;
+  $('#speedValueFlight').textContent=`${state.flight.airspeed} m/s`;
+  const balance=net>2?'Airflow lift exceeds weight.':net< -2?'Weight exceeds airflow lift.':'Airflow lift and weight nearly balance.';
+  const result=state.flight.flapping?`${balance} Wingbeats also push air down and back for lift and thrust.`:`${balance} With no wingbeats, the bird glides.`;
+  $('#resultValue').textContent=state.flight.flapping?'Flapping':'Gliding';
+  $('#scenarioMode').textContent=result;
+  $('#sceneCallout').textContent=result;
 }
 function updateFlock(dt){
   const f=state.flock;
@@ -324,19 +353,21 @@ function updateFlock(dt){
   }
 }
 
-$('#updraft').addEventListener('input',event=>{const f=state.flight;f.updraft=Number(event.target.value);f.altitude=f.startHeight;f.distance=0;f.time=0;f.running=true;$('#flightToggle').textContent='Pause flight';$('#updraftOutput').textContent=`${f.updraft.toFixed(2)} m/s`;updateFlightReadout()});
-$('#startHeight').addEventListener('input',event=>{const value=Number(event.target.value);state.flight.startHeight=value;state.flight.altitude=value;state.flight.distance=0;state.flight.time=0;state.flight.running=true;$('#startHeightOutput').textContent=`${value} m`;$('#flightToggle').textContent='Pause flight';updateFlightReadout()});
+$('#airspeed').addEventListener('input',event=>{state.flight.airspeed=Number(event.target.value);$('#airspeedOutput').textContent=`${state.flight.airspeed} m/s`;updateFlightReadout()});
+$('#spread').addEventListener('input',event=>{state.flight.spread=Number(event.target.value)/100;$('#spreadOutput').textContent=`${event.target.value}%`;updateFlightReadout()});
+function setFlightStyle(flapping){state.flight.flapping=flapping;$('#flapButton').setAttribute('aria-pressed',String(flapping));$('#glideButton').setAttribute('aria-pressed',String(!flapping));updateFlightReadout()}
+$('#flapButton').addEventListener('click',()=>setFlightStyle(true));
+$('#glideButton').addEventListener('click',()=>setFlightStyle(false));
 const flockInputs=[['separation','separationOutput'],['alignment','alignmentOutput'],['cohesion','cohesionOutput']];
 for(const [id,output] of flockInputs){$("#"+id).addEventListener('input',event=>{state.flock[id]=Number(event.target.value);$("#"+output).textContent=Number(event.target.value).toFixed(1)})}
 $('#flockSize').addEventListener('input',event=>{$('#flockSizeOutput').textContent=event.target.value});
 $('#flockSize').addEventListener('change',event=>{state.flock.size=Number(event.target.value);buildFlock(state.flock.size)});
 
-$('#flightToggle').addEventListener('click',()=>{if(state.flight.altitude===0){state.flight.altitude=state.flight.startHeight;state.flight.distance=0;state.flight.time=0}state.flight.running=!state.flight.running;$('#flightToggle').textContent=state.flight.running?'Pause flight':'Resume flight';updateFlightReadout()});
 $('#flockToggle').addEventListener('click',()=>{state.flock.running=!state.flock.running;$('#flockToggle').textContent=state.flock.running?'Pause flock':'Resume flock'});
 $('#flightReset').addEventListener('click',()=>{
-  Object.assign(state.flight,{updraft:0.5,startHeight:100,altitude:100,distance:0,running:true,time:0});
-  $('#updraft').value='0.5';$('#startHeight').value='100';
-  $('#updraftOutput').textContent='0.50 m/s';$('#startHeightOutput').textContent='100 m';$('#flightToggle').textContent='Pause flight';updateFlightReadout();
+  Object.assign(state.flight,{airspeed:16,spread:1,flapping:true,time:0});
+  $('#airspeed').value='16';$('#spread').value='100';
+  $('#airspeedOutput').textContent='16 m/s';$('#spreadOutput').textContent='100%';setFlightStyle(true);
 });
 $('#flockReset').addEventListener('click',()=>{
   Object.assign(state.flock,{size:16,separation:1.4,alignment:1,cohesion:.8,running:true,time:0});
@@ -349,11 +380,14 @@ function setMode(mode){
   state.mode=mode;
   const flight=mode==='flight';
   flightBird.visible=flight;flockGroup.visible=!flight;
+  ground.visible=!flight;hills.forEach(hill=>hill.visible=!flight);
+  liftArrow.visible=flight;weightArrow.visible=flight;dragArrow.visible=flight;thrustArrow.visible=flight&&state.flight.flapping;airflow.forEach(item=>item.visible=flight);
   $('#flightControls').hidden=!flight;$('#flockControls').hidden=flight;
   $('#flightReadout').hidden=!flight;$('#flockReadout').hidden=flight;
   $('#flightExtra').hidden=!flight;
-  $('#labTitle').textContent=flight?'When can a golden eagle soar?':'How does a flock move together?';
-  $('#stageLabel').textContent=flight?'GOLDEN EAGLE · SOARING MODEL':'MODEL BIRDS · FLOCKING RULES';
+  $('#labTitle').textContent=flight?'How do birds fly?':'How does a flock move together?';
+  $('#stageLabel').textContent=flight?'BIRD FLIGHT · 3D FORCE MODEL':'MODEL BIRDS · FLOCKING RULES';
+  $('#forceKey').hidden=!flight;$('#sceneCallout').hidden=!flight;
   $('#flightTab').setAttribute('aria-selected',String(flight));$('#flockTab').setAttribute('aria-selected',String(!flight));
   $('#flightTab').tabIndex=flight?0:-1;$('#flockTab').tabIndex=flight?-1:0;
 }
